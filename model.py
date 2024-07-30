@@ -17,6 +17,7 @@ class User(db.Model, SerializerMixin):
     last_name = db.Column(db.String)
     email = db.Column(db.String)
     password = db.Column(db.String)
+    products = db.relationship("Product", back_populates = "user", cascade = "delete orphan all")
 
     def __repr__(self):
         return f'<User {self.id},{self.first_name}, {self.last_name}>'
@@ -31,6 +32,8 @@ class Product(db.Model, SerializerMixin):
     categoryId = db.Column(db.Integer, db.ForeignKey('categories.id'))
     shopId = db.Column(db.Integer, db.ForeignKey('shops.id'))
     product_image = db.Column(db.String)
+    user = db.relationship("User", back_populates = "products")
+    shop = db.relationship("Shop", back_populates = "products")
 
     def __repr__(self):
         return f'<Product {self.name}, {self.price}>'
@@ -39,6 +42,7 @@ class Shop(db.Model, SerializerMixin):
     __tablename__ = "shops"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
+    products = db.relationship("Product", back_populates = "shop")
 
     def __repr__(self):
         return f'Shop {self.name}'
