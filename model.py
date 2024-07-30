@@ -17,7 +17,7 @@ class User(db.Model, SerializerMixin):
     last_name = db.Column(db.String)
     email = db.Column(db.String)
     password = db.Column(db.String)
-    products = db.relationship("Product", back_populates = "user", cascade = "delete orphan all")
+    products = db.relationship("Product", back_populates = "user", cascade = "all, delete-orphan")
 
     def __repr__(self):
         return f'<User {self.id},{self.first_name}, {self.last_name}>'
