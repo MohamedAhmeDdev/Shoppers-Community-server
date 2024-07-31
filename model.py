@@ -18,7 +18,7 @@ class User(db.Model, SerializerMixin):
     email = db.Column(db.String)
     password = db.Column(db.String)
     # products = db.relationship("Product", back_populates = "user", cascade = "all, delete-orphan")
-
+    serialize_rules = ("-products.users",)
     def __repr__(self):
         return f'<User {self.id},{self.first_name}, {self.last_name}>'
     
@@ -32,9 +32,9 @@ class Product(db.Model, SerializerMixin):
     categoryId = db.Column(db.Integer, db.ForeignKey('categories.id'))
     shopId = db.Column(db.Integer, db.ForeignKey('shops.id'))
     product_image = db.Column(db.String)
-    user = db.relationship("Searches", back_populates = "products")
+    searched = db.relationship("Searches", back_populates = "products")
     shop = db.relationship("Shop", back_populates = "products")
-    serialize_rules = ('-user, -shop',)
+    serialize_rules = ('-user.products, -shop.products',)
 
     def __repr__(self):
         return f'<Product {self.name}, {self.price}>'
@@ -44,7 +44,7 @@ class Shop(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     products = db.relationship("Product", back_populates = "shop")
-    serialize_rules = ("-products",)
+    serialize_rules = ("-products.shops",)
 
     def __repr__(self):
         return f'Shop {self.name}'
@@ -59,9 +59,9 @@ class Searches(db.Model, SerializerMixin):
     __tablename__ = "searches"
     id = db.Column(db.Integer, primary_key=True)
     productId = db.Column(db.Integer, db.ForeignKey('products.id'))
-    products = db.relationship("Product", back_populates = "user")
+    products = db.relationship("Product", back_populates = "searched")
 
-    serialize_rules = ("-products",)
+    serialize_rules = ("-products.searches",)
 
 
     

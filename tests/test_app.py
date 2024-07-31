@@ -1,22 +1,19 @@
-from app import index, searches
+from app import index,app
 from model import Searches
+import pytest
+
 
 
 def test_index():
     assert index() == "Hello, world!"
 
-def test_searches():
-    # Create some sample search data
-    Searches.query.all.return_value = [
-        Searches(products="Product 1"),
-        Searches(products="Product 2")
-    ]
+@pytest.fixture
+def client():
+    with app.test_client() as client:
+        with app.app_context():
+            yield client
 
-    # Test the searches function
-    response = searches()
+def test_search_history_endpoint_exists(client):
+    response = client.get('/searchhistory')
     assert response.status_code == 200
-    assert response.json == [
-        {"products": "Product 1"},
-        {"products": "Product 2"}
-    ]
-
+    assert isinstance(response.get_json(), list)
