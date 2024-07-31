@@ -1,132 +1,271 @@
-import cloudinary
-import cloudinary.uploader
-import cloudinary
-import cloudinary.uploader
-from model import db, Product, Shop, Category
+from model import db, Product, Shop, Category 
 from app import app
 
-# Configure Cloudinary
-cloudinary.config(
-    cloud_name='dows56r9v',
-    api_key='352337169378987',
-    api_secret='zRPXOHtgbFiTbRoq3q7NGG3hLeg'
-)
-
-def upload_image_to_cloudinary(image_path, folder):
-    result = cloudinary.uploader.upload(
-        image_path,
-        folder=folder
-    )
-    return result['url']
 
 with app.app_context():
-    print("Deleting data.....")
+
     Product.query.delete()
     Shop.query.delete()
     Category.query.delete()
-    db.session.commit()
 
-    print("Creating data .....")
+s3 = Shop(name ="Jumia")
+s4 = Shop(name ="Kilimall") 
 
-    s1 = Shop(name="Amazon")
-    s2 = Shop(name="Alibaba")
+c3 =Product(name ="Clothing")
+c4 =Product(name ="Sports and Outdoors")
 
-    # Upload images for categories
-    c1_image_url = upload_image_to_cloudinary('https://i.ebayimg.com/thumbs/images/g/A4AAAOSwiYNmOozq/s-l640.jpg', folder='categories')
-    c2_image_url = upload_image_to_cloudinary('https://www.gearpatrol.com/wp-content/uploads/sites/2/2023/07/best-furniture-refresh-lead-1659534331-jpg.webp', folder='categories')
+cl1 = Product(
+    name = "Fashion Men's Simple T-Shirt Short Sleeve",
+    price = 847.00,
+    ratings = 4.2,
+    mode_of_payment = "After delivery",
+    category = 3,
+    shopId = 3,
+    product_image = ""
 
-    c1 = Category(name="Electronics", category_image=c1_image_url)
-    c2 = Category(name="Furniture", category_image=c2_image_url)
+)
 
-    # Upload images for products
-    e1_image_url = upload_image_to_cloudinary('https://m-cdn.phonearena.com/images/articles/406312-image/Samsung-Galaxy-A05s.jpg',folder='products')
-    e2_image_url = upload_image_to_cloudinary('https://m.media-amazon.com/images/S/aplus-media-library-service-media/3967678b-5f5b-4a23-8d96-bab21662328c.__CR0,0,970,600_PT0_SX970_V1___.jpg', folder='products')
-    f1_image_url = upload_image_to_cloudinary('https://cdn.fairdealfurniture.co.ke/wp-content/uploads/2024/05/10105626/1-4-jpg.webp',folder='products')
-    f2_image_url = upload_image_to_cloudinary('https://furniturepalacekenya.com/wp-content/uploads/2023/03/CAIN-BED-3-1-800x533.jpg',folder='products')
+cl2 = Product(
+    name = "Fashion Men's Simple T-Shirt Short Sleeve",
+    price = 500.00,
+    ratings = 4.0,
+    mode_of_payment = "Before delivery",
+    category = 3,
+    shopId = 4,
+    product_image = ""
 
-    e1 = Product(
-        name="Samsung A05",
-        price=30000.00,
-        ratings=4.7,
-        mode_of_payment="After delivery",
-        categoryId=1,
-        shopId=1,
-        product_image=e1_image_url
-    )
-    e2 = Product(
-        name="Samsung A05",
-        price=33000.00,
-        ratings=4.7,
-        mode_of_payment="After delivery",
-        categoryId=1,
-        shopId=2,
-        product_image=e1_image_url
-    )
-    e3 = Product(
-        name="Hp EliteBook 840 G3",
-        price=29999.00,
-        ratings=4,
-        mode_of_payment="After Delivery",
-        categoryId=1,
-        shopId=1,
-        product_image=e2_image_url
-    )
-    e4 = Product(
-        name="Hp EliteBook 840 G3",
-        price=29000.00,
-        ratings=4,
-        mode_of_payment="After Delivery",
-        categoryId=1,
-        shopId=2,
-        product_image=e2_image_url
-    )
-    f1 = Product(
-        name="5-Seater Corporate Sofa",
-        price=69999.00,
-        ratings=3,
-        mode_of_payment="Upfront",
-        categoryId=2,
-        shopId=1,
-        product_image=f1_image_url
-    )
-    f2 = Product(
-        name="5-Seater Corporate Sofa",
-        price=70000.00,
-        ratings=3,
-        mode_of_payment="Upfront",
-        categoryId=2,
-        shopId=2,
-        product_image=f1_image_url
-    )
-    f3 = Product(
-        name="HarMony King Bed Only",
-        price=75000.00,
-        ratings=5,
-        categoryId=2,
-        mode_of_payment="After Delivery",
-        shopId=1,
-        product_image=f2_image_url
-    )
-    f4 = Product(
-        name="HarMony King Bed Only",
-        price=75000.00,
-        ratings=5,
-        categoryId=2,
-        shopId=2,
-        mode_of_payment="Upfront",
-        product_image=f2_image_url
-    )
+)
 
-    categories = [c1, c2]
-    shops = [s1, s2]
-    electronics = [e1, e2, e3, e4]
-    furnitures = [f1, f2, f3, f4]
+cl3 = Product(
+    name = "khaki trouser",
+    price = 1000.00,
+    ratings = 4.8,
+    mode_of_payment = "After delivery",
+    category = 3,
+    shopId = 3,
+    product_image = ""
+)
 
-    db.session.add_all(electronics)
-    db.session.add_all(furnitures)
-    db.session.add_all(shops)
-    db.session.add_all(categories)
+cl4 = Product(
+    name = "khaki trouser",
+    price = 800.00,
+    ratings = 4.0,
+    mode_of_payment = "Before delivery",
+    category = 3,
+    shopId = 4,
+    product_image = ""
+)
 
-    db.session.commit()
+cl5 = Product(
+    name = "adidas samba-white/red/grey",
+    price = 5000.00,
+    ratings = 5.0,
+    mode_of_payment = "After delivery",
+    category = 3,
+    shopId = 3,
+    product_image = ""
+)
 
-    print("Seeding done")
+cl6 = Product(
+    name = "adidas samba-white/red/grey",
+    price = 3000.00,
+    ratings = 4.5,
+    mode_of_payment = "Before delivery",
+    category = 3,
+    shopId = 4,
+    product_image = ""
+)
+
+cl7 = Product(
+    name = "ladies cotton tanktop",
+    price = 1400.00,
+    ratings = 5.0,
+    mode_of_payment = "After delivery",
+    category = 3,
+    shopId = 3,
+    product_image = ""
+)
+
+cl8 = Product(
+    name = "ladies cotton tanktop",
+    price = 1200.00,
+    ratings = 4.3,
+    mode_of_payment = "Before delivery",
+    category = 3,
+    shopId = 4,
+    product_image = ""
+)
+
+cl9 = Product(
+    name = "High Waist Jeans",
+    price = 1900.00,
+    ratings = 5.0,
+    mode_of_payment = "After delivery",
+    category = 3,
+    shopId = 3,
+    product_image = ""
+)
+
+cl10 = Product(
+    name = "High Waist Jeans",
+    price = 1500.00,
+    ratings = 3.8,
+    mode_of_payment = "Before delivery",
+    category = 3,
+    shopId = 4,
+    product_image = ""
+)
+
+cl11 = Product(
+    name = "Womens air max 1",
+    price = 21000.00,
+    ratings = 5.5,
+    mode_of_payment = "After delivery",
+    category = 3,
+    shopId = 3,
+    product_image = ""
+)
+
+cl12 = Product(
+    name = "Womens air max 1",
+    price = 18000.00,
+    ratings = 3.5,
+    mode_of_payment = "Before delivery",
+    category = 3,
+    shopId = 4,
+    product_image = ""
+) 
+
+cl13 = Product(
+    name = "Marvel Spiderman Shirts",
+    price = 4736.00,
+    ratings = 4.5,
+    mode_of_payment = "After delivery",
+    category = 3,
+    shopId = 3,
+    product_image = ""
+)
+
+cl14 = Product(
+    name = "Marvel Spiderman Shirts",
+    price = 2812.00,
+    ratings = 3.2,
+    mode_of_payment = "Before delivery",
+    category = 3,
+    shopId = 4,
+    product_image = ""
+) 
+
+cl15 = Product(
+    name = "Denim black trouser",
+    price = 1299.00,
+    ratings = 4.0,
+    mode_of_payment = "After delivery",
+    category = 3,
+    shopId = 3,
+    product_image = ""
+) 
+
+cl16 = Product(
+    name = "Denim black trouser",
+    price = 1085.00,
+    ratings = 3.3,
+    mode_of_payment = "Before delivery",
+    category = 3,
+    shopId = 4,
+    product_image = ""
+) 
+
+cl17 = Product(
+    name = "Air Force 1 - Black",
+    price = 3000.00,
+    ratings = 5.0,
+    mode_of_payment = "After delivery",
+    category = 3,
+    shopId = 3,
+    product_image = ""
+) 
+
+cl18 = Product(
+    name = "Air Force 1 - Black",
+    price = 1800.00,
+    ratings = 3.5,
+    mode_of_payment = "Before delivery",
+    category = 3,
+    shopId = 4,
+    product_image = ""
+) 
+
+sp1 = Product(
+    name = "Huge family tent canvas",
+    price = 27499.00,
+    ratings = 5,
+    mode_of_payment = "After delivery",
+    category = 4,
+    shopId = 3,
+    product_image = ""
+)
+
+sp2 = Product(
+    name = "Huge family tent canvas",
+    price = 20000.00,
+    ratings = 4,
+    mode_of_payment = "Before delivery",
+    category = 4,
+    shopId = 4,
+    product_image = ""
+)
+
+sp3 = Product(
+    name = "Weightlifting Belt",
+    price = 2981.00,
+    ratings = 5,
+    mode_of_payment = "After delivery",
+    category = 4,
+    shopId = 3,
+    product_image = ""
+)
+
+sp4 = Product(
+    name = "Weightlifting Belt",
+    price = 2100.00,
+    ratings = 3,
+    mode_of_payment = "Before delivery",
+    category = 4,
+    shopId = 4,
+    product_image = ""
+)
+
+sp5 = Product(
+    name = "Molten Indoors & Outdoors Basketball",
+    price = 2700.00,
+    ratings = 5,
+    mode_of_payment = "After delivery",
+    category = 4,
+    shopId = 3,
+    product_image = ""
+)
+
+sp6 = Product(
+    name = "Molten Indoors & Outdoors Basketball",
+    price = 2000.00,
+    ratings = 4,
+    mode_of_payment = "Before delivery",
+    category = 4,
+    shopId = 4,
+    product_image = ""
+)
+
+categories = [c3 , c4]
+shops = [s3 , s4]
+clothings = [cl1,cl2,cl3,cl4,cl5,cl6,cl7,cl8,cl9,cl10,cl11,cl12,cl13,cl14,cl15,cl16,cl17,cl18]
+sports and outdoors = [sp1,sp2,sp3,sp4,sp5]
+
+db.session.add_all(clothings)
+db.session.add_all(sports and outdoors)
+db.session.add_all(shops)
+db.session.add_all(categories)
+
+db.session.commit()
+
+print("Seeding done")
