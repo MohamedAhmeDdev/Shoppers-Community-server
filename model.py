@@ -59,9 +59,11 @@ class Searches(db.Model, SerializerMixin):
     __tablename__ = "searches"
     id = db.Column(db.Integer, primary_key=True)
     productId = db.Column(db.Integer, db.ForeignKey('products.id'))
-    products = db.relationship("Product", back_populates = "user")
+    userId = db.Column(db.Integer, db.ForeignKey('users.id')) 
+    products = db.relationship("Product", back_populates="user")
+    user = db.relationship("User") 
 
-    serialize_rules = ("-products",)
+    serialize_rules = ("-products", "-user")  
 
 
     
