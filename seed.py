@@ -8,8 +8,8 @@ from app import app
 # Configure Cloudinary
 cloudinary.config(
     cloud_name='dows56r9v',
-    api_key='296524897655252',
-    api_secret='LSawka1n4AuQ-nrhVcDdaGlqSgI'
+    api_key='352337169378987',
+    api_secret='zRPXOHtgbFiTbRoq3q7NGG3hLeg'
 )
 
 def upload_image_to_cloudinary(image_path, folder):
