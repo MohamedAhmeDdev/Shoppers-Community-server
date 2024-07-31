@@ -53,6 +53,7 @@ class Category(db.Model, SerializerMixin):
     __tablename__ = "categories"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
+    category_image = db.Column(db.String)
 
 class Searches(db.Model, SerializerMixin):
     __tablename__ = "searches"
