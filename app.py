@@ -25,6 +25,19 @@ with app.app_context():
 def index():
      return "Hello, world!"
 
+@app.route("/searchhistory", methods = ['GET'])
+def searches():
+     searches = []
+     for search in Searches.query.all():
+          search_dict = {
+               "products": search.products
+          }
+          searches.append(search_dict)
+     response = make_response(
+          searches, 200
+     )
+     return response
+
 
 
 
