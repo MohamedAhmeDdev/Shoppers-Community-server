@@ -28,6 +28,27 @@ with app.app_context():
 def index():
      return "Hello, world!"
 
+@app.route('/products', methods = ['GET'])
+def all_products():
+     products =[]
+     for product in Product.query.all():
+          product_dict ={
+               "name":product.name,
+               "price":product.price,
+               "ratings":product.ratings,
+               "mode_of_payment":product.mode_of_payment,
+               "categoryId":product.categoryId,
+               "shopId":product.id,
+               "product_image":product.product_image
+          }
+          products.append(product_dict)
+     response = make_response(
+          products, 200
+     )
+     return response
+     
+
+
 @app.route("/searchhistory", methods = ['GET'])
 def searches():
      searches = []

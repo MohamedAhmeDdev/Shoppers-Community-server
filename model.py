@@ -17,7 +17,7 @@ class User(db.Model, SerializerMixin):
     last_name = db.Column(db.String)
     email = db.Column(db.String)
     password = db.Column(db.String)
-    # products = db.relationship("Product", back_populates = "user", cascade = "all, delete-orphan")
+    products = db.relationship("Searches", back_populates = "user", cascade = "all, delete-orphan")
     serialize_rules = ("-products.users",)
     def __repr__(self):
         return f'<User {self.id},{self.first_name}, {self.last_name}>'
@@ -60,10 +60,10 @@ class Searches(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     productId = db.Column(db.Integer, db.ForeignKey('products.id'))
     userId = db.Column(db.Integer, db.ForeignKey('users.id')) 
-    products = db.relationship("Product", back_populates="user")
-    user = db.relationship("User") 
+    products = db.relationship("Product", back_populates="searched")
+    user = db.relationship("User" ,back_populates = 'products') 
 
-    serialize_rules = ("-products", "-user")  
+    serialize_rules = ("-products", "-user",)  
 
 
     
