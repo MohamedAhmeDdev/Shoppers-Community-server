@@ -1,3 +1,5 @@
+# test_product.py
+
 import pytest
 from app import app, db, Product, Shop
 
@@ -11,13 +13,11 @@ def client():
 
 @pytest.fixture
 def setup_db(client):
-    # Add test shops
     shop1 = Shop(id=1, name="Shop 1")
     shop2 = Shop(id=2, name="Shop 2")
     db.session.add(shop1)
     db.session.add(shop2)
     
-    # Add test products
     product1 = Product(id=1, name="Product 1", price=100, ratings=4.5, mode_of_payment="Credit", categoryId=1, shopId=1)
     product2 = Product(id=2, name="Product 2", price=200, ratings=3.5, mode_of_payment="Cash", categoryId=1, shopId=2)
     db.session.add(product1)
@@ -26,7 +26,7 @@ def setup_db(client):
     db.session.commit()
 
 def test_get_products_by_category(client, setup_db):
-    response = client.get('/categories/1')
+    response = client.get('/categories/1/')
     data = response.get_json()
 
     assert response.status_code == 200
@@ -37,7 +37,7 @@ def test_get_products_by_category(client, setup_db):
     assert 'Product 2' in data['product_names']
 
 def test_get_products_by_category_no_products(client):
-    response = client.get('/categories/999')
+    response = client.get('/categories/999/')
     data = response.get_json()
 
     assert response.status_code == 404

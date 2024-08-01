@@ -1,8 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from model import db, Category, Product, Shop
+from model import db, User, Product, Searches, Category, Shop
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shophorizon.db'
@@ -25,6 +25,25 @@ class CategoryList(Resource):
         categories = [category.to_dict() for category in categories]
         return jsonify(categories)
 
+
+
+
+class SearchHistory(Resource):
+    def get(self):
+        searches = []
+        for search in Searches.query.all():
+            search_dict = {
+                "products": search.products
+            }
+            searches.append(search_dict)
+        response = make_response(
+            searches, 200
+        )
+        return response
+
+
+
+
 class ProductsByCategory(Resource):
     def get(self, category_id):
         query = Product.query.filter_by(categoryId=category_id).all()
@@ -40,7 +59,8 @@ class ProductsByCategory(Resource):
 
         for product in products_list:
             shop_id = product['shopId']
-            shop = Shop.query.get(shop_id)
+            shop = db.session.get(Shop, shop_id)
+
             
             if shop:
                 shop_name = shop.name
@@ -97,6 +117,7 @@ class FilteredProducts(Resource):
             "products": products_list
         }
 
+api.add_resource(SearchHistory, "/searchhistory")
 api.add_resource(CategoryList, '/categories')
 api.add_resource(ProductsByCategory, '/categories/<int:category_id>/')
 api.add_resource(FilteredProducts, '/filtered-products')
