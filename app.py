@@ -4,27 +4,32 @@ from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from model import db, User, Product, Searches, Category, Shop
 from flask_bcrypt import Bcrypt
-import jwt
-import datetime
 from flask_jwt_extended import JWTManager
-
 from flask_jwt_extended import jwt_required, get_jwt_identity , create_access_token
+from flask_mail import Mail, Message
+import secrets
+from datetime import timedelta
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shophorizon.db'
 app.config['SECRET_KEY'] = 'weststsgjgjgjtyb'
-app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'
+app.config['JWT_SECRET_KEY'] = 'trduiguierifd'
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=1)
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)  # Updated usage
+app.config['MAIL_SERVER'] = 'smtp.googlemail.com'  
+app.config['MAIL_PORT'] =  587
+app.config['MAIL_USERNAME'] = 'mohamed.ahmed2@student.moringaschool.com'
+app.config['MAIL_PASSWORD'] = 'yfwl nuoj oksv woya'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
 
 app.json.compact = False
 bcrypt = Bcrypt()
-
 migrate = Migrate(app, db)
 db.init_app(app)
-
 CORS(app)
 jwt = JWTManager(app)
+mail = Mail(app)
 api = Api(app)
 
 with app.app_context():
@@ -63,21 +68,65 @@ class Register(Resource):
         existing_user = User.query.filter_by(email=data.get("email")).first()
         if existing_user:
             return {'message': 'Email already exists'}, 400
+
+        # Generate a verification token
+        token = secrets.token_urlsafe(16)
+      
+        
         hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
-        user = User(first_name=data['first_name'], last_name=data['last_name'], email=data['email'], password=hashed_password)
+        user = User(
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            email=data['email'],
+            password=hashed_password,
+            verification_token=token,
+        )
         db.session.add(user)
         db.session.commit()
-        return {'message': 'User registered successfully'}, 201
+
+        # Send verification email
+        verification_url = f"{token}"
+        msg = Message(
+            'Verify your email', 
+            recipients=[data['email']],
+            sender="eff@gmail.com"
+        )
+        msg.html = (
+            f"<p>Dear {user.first_name} {user.last_name},</p>"
+            "<p>Thank you for registering at ShopHorizon. To complete your registration and verify your email address, "
+            "please click the link below:</p>"
+            f"<p><a href='http://localhost:3000/user/{verification_url}'>Verify your email</a></p>"
+            "<p>If you did not register for this account, please ignore this email.</p>"
+            "<p>Best regards,<br>The ShopHorizon Team</p>"
+        )
+        mail.send(msg)
+
+        return {'message': 'User registered successfully. Please check your email to verify your account.'}, 201
+    
+
+
+class VerifyEmail(Resource):
+    def get(self, token):
+        user = User.query.filter_by(verification_token=token).first()
+        if not user:
+            return {'message': 'Invalid or expired token'}, 400
+        user.is_verified = True
+        user.verification_token = None  
+        db.session.commit()
+        return {'message': 'Registration confirmed successfully'}, 200
+    
 
 class Login(Resource):
     def post(self):
         data = request.get_json()
         user = User.query.filter_by(email=data['email']).first()
         if user and bcrypt.check_password_hash(user.password, data['password']):
+            if not user.is_verified:
+                return {'message': 'Account not Verified. Please check your email.'}, 403
             token = create_access_token(identity=user.id)
             return {'token': token}, 200
-        else:
-            return {'message': 'Invalid credentials'}, 401
+        
+        return {'message': 'Invalid credentials'}, 401
 
 
 
@@ -155,14 +204,61 @@ class FilteredProducts(Resource):
             "products": products_list
         }
 
+class ForgotPassword(Resource):
+    def post(self):
+        data = request.get_json()
+        user = User.query.filter_by(email=data.get('email')).first()
+        if not user:
+            return {'message': 'No user found with this email'}, 404
+
+        # Generate password reset token
+        reset_token = secrets.token_urlsafe(16)
+        user.reset_token = reset_token
+        db.session.commit()
+
+        # Send reset email
+        reset_url = f"http://localhost:3000/reset-password/{user.id}"
+        msg = Message(
+            'Password Reset Request',
+            recipients=[data['email']],
+            sender="noreply@example.com"
+        )
+        msg.html = (
+            f"<p>Dear {user.first_name},</p>"
+            "<p>You requested to reset your password. Please click the link below to reset your password:</p>"
+            f"<p><a href='{reset_url}'>Reset Password</a></p>"
+            "<p>If you did not request this, please ignore this email.</p>"
+            "<p>Best regards,<br>The ShopHorizon Team</p>"
+        )
+        mail.send(msg)
+
+        return {'message': 'Password reset email sent. Please check your email.'}, 200
+
+
+
+class ResetPassword(Resource):
+    def post(self, user_id):
+        data = request.get_json()
+        user = User.query.filter_by(id=user_id).first()
+        if not user:
+            return {'message': 'Invalid or expired token'}, 400
+
+        new_password = data.get('password')
+        user.password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        db.session.commit()
+
+        return {'message': 'Password reset successfully'}, 200
+    
 api.add_resource(SearchHistory, "/searchhistory")
 api.add_resource(CategoryList, '/categories')
 api.add_resource(ProductsByCategory, '/categories/<int:category_id>/')
 api.add_resource(FilteredProducts, '/filtered-products')
-
-
 api.add_resource(Register, "/register")
 api.add_resource(Login, "/login")
+api.add_resource(VerifyEmail, '/verify/<string:token>')
+api.add_resource(ForgotPassword, '/forgot-password')
+api.add_resource(ResetPassword, '/reset-password/<string:user_id>')
+
 
 
 if __name__ == "__main__":
