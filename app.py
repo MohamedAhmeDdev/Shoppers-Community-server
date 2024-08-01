@@ -8,7 +8,7 @@ import jwt
 import datetime
 
 
-app = Flask(_name_)
+app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shophorizon.db'
 app.config['SECRET_KEY'] = 'weststsgjgjgjtyb'
 app.json.compact = False
@@ -160,6 +160,5 @@ api.add_resource(Register, "/register")
 api.add_resource(Login, "/login")
 
 
-
-if _name_ == "_main_":
+if __name__ == "__main__":
     app.run(port=5555, debug=True)
