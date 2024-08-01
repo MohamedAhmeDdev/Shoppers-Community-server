@@ -1,4 +1,4 @@
-from app import index,app
+from app import app
 from model import Searches
 import pytest
 
