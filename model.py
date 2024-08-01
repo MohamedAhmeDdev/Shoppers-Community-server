@@ -65,5 +65,8 @@ class Searches(db.Model, SerializerMixin):
 
     serialize_rules = ("-products", "-user")  
 
+    def __repr__(self):
+        return f'<Search {self.id}, User {self.userId}, Product {self.productId}>'
+
 
     
