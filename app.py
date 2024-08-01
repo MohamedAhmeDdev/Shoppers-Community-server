@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from model import db, User, Product, Searches, Category, Shop
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shophorizon.db'
@@ -29,18 +30,18 @@ class CategoryList(Resource):
 
 
 class SearchHistory(Resource):
-    def get(self, user_id):
-     existing_user = User.query.filter_by(userId=user_id).first()
-     if existing_user: 
-        searches = []
-        for search in Searches.query.all():
-            search_dict = {
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()  # Get the user ID from the JWT
+        searches = Searches.query.filter_by(user_id=user_id).all()
+        
+        search_data = [
+            {
                 "products": search.products
-            }
-            searches.append(search_dict)
-        response = make_response(
-            searches, 200
-        )
+            } for search in searches
+        ]
+        
+        response = make_response(search_data, 200)
         return response
 
 
