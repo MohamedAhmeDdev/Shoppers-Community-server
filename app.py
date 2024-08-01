@@ -3,19 +3,28 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from model import db, User, Product, Searches, Category, Shop
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_bcrypt import Bcrypt
+import jwt
+import datetime
+from flask_jwt_extended import JWTManager
 
+from flask_jwt_extended import jwt_required, get_jwt_identity , create_access_token
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shophorizon.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'weststsgjgjgjtyb'
+app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'
+app.config['JWT_TOKEN_LOCATION'] = ['headers']
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=1)
+
 app.json.compact = False
+bcrypt = Bcrypt()
 
 migrate = Migrate(app, db)
 db.init_app(app)
 
 CORS(app)
-
+jwt = JWTManager(app)
 api = Api(app)
 
 with app.app_context():
@@ -33,17 +42,42 @@ class CategoryList(Resource):
 class SearchHistory(Resource):
     @jwt_required()
     def get(self):
-        user_id = get_jwt_identity()
-        searches = Searches.query.filter_by(user_id=user_id).all()
-        
+        user_id = get_jwt_identity()  # Get the user ID from the JWT
+        searches = Searches.query.filter_by(userId=user_id).all()
+
         search_data = [
             {
                 "products": search.products
             } for search in searches
         ]
-        
+
         response = make_response(search_data, 200)
         return response
+
+
+
+
+class Register(Resource):
+    def post(self):
+        data = request.get_json()
+        existing_user = User.query.filter_by(email=data.get("email")).first()
+        if existing_user:
+            return {'message': 'Email already exists'}, 400
+        hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+        user = User(first_name=data['first_name'], last_name=data['last_name'], email=data['email'], password=hashed_password)
+        db.session.add(user)
+        db.session.commit()
+        return {'message': 'User registered successfully'}, 201
+
+class Login(Resource):
+    def post(self):
+        data = request.get_json()
+        user = User.query.filter_by(email=data['email']).first()
+        if user and bcrypt.check_password_hash(user.password, data['password']):
+            token = create_access_token(identity=user.id)
+            return {'token': token}, 200
+        else:
+            return {'message': 'Invalid credentials'}, 401
 
 
 
