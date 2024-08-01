@@ -9,7 +9,7 @@ def client():
         with app.app_context():
             db.create_all()
             yield client
-            db.drop_all()
+            
 
 @pytest.fixture
 def setup_db(client):
