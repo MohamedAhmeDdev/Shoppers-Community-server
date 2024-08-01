@@ -5,6 +5,7 @@ from flask_restful import Api, Resource
 from model import db, User, Product, Searches, Category, Shop
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shophorizon.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -124,6 +125,11 @@ api.add_resource(SearchHistory, "/searchhistory")
 api.add_resource(CategoryList, '/categories')
 api.add_resource(ProductsByCategory, '/categories/<int:category_id>/')
 api.add_resource(FilteredProducts, '/filtered-products')
+
+
+api.add_resource(Register, "/register")
+api.add_resource(Login, "/login")
+
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
