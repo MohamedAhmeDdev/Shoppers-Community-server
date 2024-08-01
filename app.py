@@ -32,7 +32,7 @@ class CategoryList(Resource):
 class SearchHistory(Resource):
     @jwt_required()
     def get(self):
-        user_id = get_jwt_identity()  # Get the user ID from the JWT
+        user_id = get_jwt_identity()
         searches = Searches.query.filter_by(user_id=user_id).all()
         
         search_data = [
