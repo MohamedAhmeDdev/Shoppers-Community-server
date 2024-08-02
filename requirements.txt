@@ -25,3 +25,5 @@ flask_restful
 flask-bcrypt
 datetime
 flask_jwt_extended
+flask_mail
+faker

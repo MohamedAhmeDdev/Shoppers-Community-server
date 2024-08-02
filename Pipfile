@@ -9,9 +9,11 @@ flask-sqlalchemy = "*"
 flask-migrate = "*"
 sqlalchemy-serializer = "*"
 flask-cors = "*"
-gunicorn = "*"
+gunicorn = "*" 
 psycopg2-binary = "*"
 flask-restful = "*"
+flask-bcrypt = "*"
+faker= "*"
 
 [dev-packages]
 
