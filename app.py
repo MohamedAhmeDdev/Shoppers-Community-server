@@ -11,7 +11,7 @@ import secrets
 from datetime import timedelta ,datetime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://shops_pwly_user:NnqY8TAiG26sSDgIpjLXob2hW1uCGe7i@dpg-cqmtigdsvqrc73ffhi7g-a.oregon-postgres.render.com/shops_pwly"
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://shops_pwly_user:NnqY8TAiG26sSDgIpjLXob2hW1uCGe7i@dpg-cqmtigdsvqrc73ffhi7g-a.oregon-postgres.render.com/shops"
 app.config['SECRET_KEY'] = 'weststsgjgjgjtyb'
 app.config['JWT_SECRET_KEY'] = 'trduiguierifd'
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
