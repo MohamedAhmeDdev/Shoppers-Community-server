@@ -19,6 +19,8 @@ class User(db.Model, SerializerMixin):
     password = db.Column(db.String, nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
     verification_token = db.Column(db.String(100), nullable=True)
+    reset_token = db.Column(db.String(255), nullable=True)
+    reset_token_expiry = db.Column(db.DateTime, nullable=True)
     searches = db.relationship("Searches", back_populates="user", cascade="all, delete-orphan")
     serialize_rules = ("-searches.user",)
 

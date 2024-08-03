@@ -8,7 +8,7 @@ from flask_jwt_extended import JWTManager
 from flask_jwt_extended import jwt_required, get_jwt_identity , create_access_token
 from flask_mail import Mail, Message
 import secrets
-from datetime import timedelta
+from datetime import timedelta ,datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://shopcommunity_user:sCAwcuq7NmJgRjxP4mgAVHdtub4sZ1nv@dpg-cqm7mbbqf0us73a6p33g-a.oregon-postgres.render.com/shopcommunity'
@@ -204,6 +204,7 @@ class FilteredProducts(Resource):
             "products": products_list
         }
 
+
 class ForgotPassword(Resource):
     def post(self):
         data = request.get_json()
@@ -211,13 +212,15 @@ class ForgotPassword(Resource):
         if not user:
             return {'message': 'No user found with this email'}, 404
 
-        # Generate password reset token
+       
         reset_token = secrets.token_urlsafe(16)
+        reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
         user.reset_token = reset_token
+        user.reset_token_expiry = reset_token_expiry
         db.session.commit()
 
-        # Send reset email
-        reset_url = f"http://localhost:3000/reset-password/{user.id}"
+       
+        reset_url = f"http://localhost:3000/resetpassword/{reset_token}"
         msg = Message(
             'Password Reset Request',
             recipients=[data['email']],
@@ -237,17 +240,28 @@ class ForgotPassword(Resource):
 
 
 class ResetPassword(Resource):
-    def post(self, user_id):
-        data = request.get_json()
-        user = User.query.filter_by(id=user_id).first()
-        if not user:
-            return {'message': 'Invalid or expired token'}, 400
+    def post(self, token):
+        user = User.query.filter_by(reset_token=token).first()
+        print(user)
+        if not user or user.reset_token_expiry < datetime.utcnow():
+            return {'message': 'token has expired'}, 400
 
-        new_password = data.get('password')
-        user.password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        data = request.get_json()
+        password = data.get('password')
+        confirm_password = data.get('confirmPassword')
+
+        if password != confirm_password:
+            return {'message': 'Passwords do not match'}, 400
+
+        # Update user password (assuming you have a method to hash the password)
+        user.password = bcrypt.generate_password_hash(password).decode('utf-8')
+        user.reset_token = None
+        user.reset_token_expiry = None
         db.session.commit()
 
         return {'message': 'Password reset successfully'}, 200
+
+
     
 api.add_resource(SearchHistory, "/searchhistory")
 api.add_resource(CategoryList, '/categories')
@@ -257,7 +271,7 @@ api.add_resource(Register, "/register")
 api.add_resource(Login, "/login")
 api.add_resource(VerifyEmail, '/verify/<string:token>')
 api.add_resource(ForgotPassword, '/forgot-password')
-api.add_resource(ResetPassword, '/reset-password/<string:user_id>')
+api.add_resource(ResetPassword, '/reset-password/<string:token>')
 
 
 
