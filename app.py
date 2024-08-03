@@ -11,7 +11,10 @@ import secrets
 from datetime import timedelta ,datetime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://shophorizon_user:jnEYZqJvtDmMpanf7XdqVSuumDZ1s8oe@dpg-cqmv385ds78s739505e0-a.oregon-postgres.render.com/shophorizon"
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    "postgresql://shophorizon_user:jnEYZqJvtDmMpanf7XdqVSuumDZ1s8oe@dpg-cqmv385ds78s739505e0-a.oregon-postgres.render.com/shophorizon?sslmode=require"
+)
+
 app.config['SECRET_KEY'] = 'weststsgjgjgjtyb'
 app.config['JWT_SECRET_KEY'] = 'trduiguierifd'
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
@@ -68,11 +71,40 @@ class Register(Resource):
         existing_user = User.query.filter_by(email=data.get("email")).first()
         if existing_user:
             return {'message': 'Email already exists'}, 400
+
+        # Generate a verification token
+        token = secrets.token_urlsafe(16)
+      
+        
         hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
-        user = User(first_name=data['first_name'], last_name=data['last_name'], email=data['email'], password=hashed_password)
+        user = User(
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            email=data['email'],
+            password=hashed_password,
+            verification_token=token,
+        )
         db.session.add(user)
         db.session.commit()
-        return {'message': 'User registered successfully'}, 201
+
+        # Send verification email
+        verification_url = f"{token}"
+        msg = Message(
+            'Verify your email', 
+            recipients=[data['email']],
+            sender="eff@gmail.com"
+        )
+        msg.html = (
+            f"<p>Dear {user.first_name} {user.last_name},</p>"
+            "<p>Thank you for registering at ShopHorizon. To complete your registration and verify your email address, "
+            "please click the link below:</p>"
+            f"<p><a href='http://localhost:3000/user/{verification_url}'>Verify your email</a></p>"
+            "<p>If you did not register for this account, please ignore this email.</p>"
+            "<p>Best regards,<br>The ShopHorizon Team</p>"
+        )
+        mail.send(msg)
+
+        return {'message': 'User registered successfully. Please check your email to verify your account.'}, 201
     
 
 
