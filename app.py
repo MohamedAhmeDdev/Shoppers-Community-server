@@ -4,17 +4,17 @@ from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from model import db, User, Product, Searches, Category, Shop
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager
-from flask_jwt_extended import jwt_required, get_jwt_identity , create_access_token
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
 from flask_mail import Mail, Message
 import secrets
 from datetime import timedelta ,datetime
+from sqlalchemy import func
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     "postgresql://shophorizon_user:jnEYZqJvtDmMpanf7XdqVSuumDZ1s8oe@dpg-cqmv385ds78s739505e0-a.oregon-postgres.render.com/shophorizon?sslmode=require"
 )
-
 app.config['SECRET_KEY'] = 'weststsgjgjgjtyb'
 app.config['JWT_SECRET_KEY'] = 'trduiguierifd'
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
@@ -26,6 +26,7 @@ app.config['MAIL_PASSWORD'] = 'yfwl nuoj oksv woya'
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
+
 app.json.compact = False
 bcrypt = Bcrypt()
 migrate = Migrate(app, db)
@@ -35,33 +36,9 @@ jwt = JWTManager(app)
 mail = Mail(app)
 api = Api(app)
 
+
 with app.app_context():
     db.create_all()
-
-class CategoryList(Resource):
-    def get(self):
-        categories = Category.query.all()
-        categories = [category.to_dict() for category in categories]
-        return jsonify(categories)
-
-
-
-
-class SearchHistory(Resource):
-    @jwt_required()
-    def get(self):
-        user_id = get_jwt_identity()  # Get the user ID from the JWT
-        searches = Searches.query.filter_by(userId=user_id).all()
-
-        search_data = [
-            {
-                "products": search.products
-            } for search in searches
-        ]
-
-        response = make_response(search_data, 200)
-        return response
-
 
 
 
@@ -133,81 +110,6 @@ class Login(Resource):
 
 
 
-
-class ProductsByCategory(Resource):
-    def get(self, category_id):
-        query = Product.query.filter_by(categoryId=category_id).all()
-        
-        if not query:
-            return {"message": "No products found for this category with the applied filters"}, 404
-
-        products_list = [product.to_dict() for product in query]
-        
-        # Group products by shop
-        products_by_shop = {}
-        product_names = set()
-
-        for product in products_list:
-            shop_id = product['shopId']
-            shop = db.session.get(Shop, shop_id)
-
-            
-            if shop:
-                shop_name = shop.name
-                
-                if shop_name not in products_by_shop:
-                    products_by_shop[shop_name] = {
-                        'products': []
-                    }
-                
-                products_by_shop[shop_name]['products'].append(product)
-                product_names.add(product['name'])
-
-        product_names = sorted(product_names)
-
-        return {
-            "products_by_shop": products_by_shop,
-            "product_names": product_names,
-        }
-
-class FilteredProducts(Resource):
-    def get(self):
-        # Get filter parameters from request args
-        price_min = request.args.get('price_min', type=float)
-        price_max = request.args.get('price_max', type=float)
-        rating_min = request.args.get('rating_min', type=float)
-        rating_max = request.args.get('rating_max', type=float)
-        name = request.args.get('name', type=str)
-        mode_of_payment = request.args.get('mode_of_payment', type=str)
-        
-        # Build query with filters
-        query = Product.query
-
-        if price_min is not None:
-            query = query.filter(Product.price >= price_min)
-        if price_max is not None:
-            query = query.filter(Product.price <= price_max)
-        if rating_min is not None:
-            query = query.filter(Product.ratings >= rating_min)
-        if rating_max is not None:
-            query = query.filter(Product.ratings <= rating_max)
-        if name:
-            query = query.filter(Product.name.ilike(f'%{name}%'))
-        if mode_of_payment:
-            query = query.filter(Product.mode_of_payment.ilike(f'%{mode_of_payment}%'))
-
-        products = query.all()
-        
-        if not products:
-            return {"message": "No products found with the applied filters"}, 404
-
-        products_list = [product.to_dict() for product in products]
-
-        return {
-            "products": products_list
-        }
-
-
 class ForgotPassword(Resource):
     def post(self):
         data = request.get_json()
@@ -215,14 +117,14 @@ class ForgotPassword(Resource):
         if not user:
             return {'message': 'No user found with this email'}, 404
 
-       
+        # Generate password reset token and expiration
         reset_token = secrets.token_urlsafe(16)
         reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
         user.reset_token = reset_token
         user.reset_token_expiry = reset_token_expiry
         db.session.commit()
 
-       
+        # Send reset email
         reset_url = f"http://localhost:3000/resetpassword/{reset_token}"
         msg = Message(
             'Password Reset Request',
@@ -263,19 +165,196 @@ class ResetPassword(Resource):
         db.session.commit()
 
         return {'message': 'Password reset successfully'}, 200
+    
 
+
+
+class CategoryList(Resource):
+    def get(self):
+        categories = Category.query.all()
+        categories = [category.to_dict() for category in categories]
+        return jsonify(categories)
+
+
+
+
+class GetProductsByCategory(Resource):
+    def get(self, category_id):
+        query = Product.query.filter_by(categoryId=category_id).all()
+        if not query:
+            return {"message": "No products found for this category with the applied filters"}, 404
+
+        products_list = [product.to_dict() for product in query]
+        products_by_shop = {}
+        product_names = set()
+
+        for product in products_list:
+            shop_id = product['shopId']
+            shop = db.session.get(Shop, shop_id)
+            if shop:
+                shop_name = shop.name
+                if shop_name not in products_by_shop:
+                    products_by_shop[shop_name] = {'products': []}
+                products_by_shop[shop_name]['products'].append(product)
+                product_names.add(product['name'])
+
+        product_names = sorted(product_names)
+        return {
+            "products_by_shop": products_by_shop,
+            "product_names": product_names,
+        }
+
+
+
+class GetQueryProducts(Resource):
+    def get(self):
+      
+        search = request.args.get('query', '').lower()
+        print(search)
+    
+        products = Product.query.all()
+       
+        if search:
+            products = [product for product in products if search in product.name.lower()]
+            print(products)
+        
+        products_list = [product.to_dict() for product in products]
+        
+        return jsonify(products_list)
+    
+
+
+class FilteredProducts(Resource):
+
+    def get(self):
+  
+        category_id = request.args.get('category_id', type=int)  
+        rating = request.args.get('rating', type=float)
+        product = request.args.get('product', type=str)
+        mode_of_payment = request.args.get('paymentMethod', type=str)
+        min_price = request.args.get('priceMin', type=float)
+        max_price = request.args.get('priceMax', type=float)
+        print(category_id, mode_of_payment)
+     
+        rounded_rating = round(rating) if rating is not None else None
+
+     
+        query = Product.query
+        
+      
+        if category_id is not None:
+            query = query.filter(Product.categoryId == category_id)
+        
+        if product:
+            query = query.filter(Product.name.ilike(f'%{product}%'))
+        if mode_of_payment:
+            query = query.filter(Product.mode_of_payment.ilike(f'%{mode_of_payment}%'))
+        if rounded_rating is not None:
+        
+            query = query.filter(func.round(Product.ratings) == rounded_rating)
+        if min_price is not None:
+            query = query.filter(Product.price >= min_price)
+        if max_price is not None:
+            query = query.filter(Product.price <= max_price)
+      
+        products = query.all()
+        
+        if not products:
+            return {"message": "No products found with the applied filters"}, 404
+        
+        products_list = [product.to_dict() for product in products]
+        return {"products": products_list}
+
+
+
+class GetQueryProduct(Resource):
+    def get(self):
+        # Get the search term from the query parameters
+        search = request.args.get('query', '').lower()
+        print(search)
+        
+        # Fetch all products from the database
+        products = Product.query.all()
+        
+        # Filter products based on the search term
+        if search:
+            products = [product for product in products if search in product.name.lower()]
+            print(products)
+        
+        # Convert the products to a list of dictionaries
+        products_list = [product.to_dict() for product in products]
+        
+        return jsonify(products_list)
+
+class FilteredQueryProduct(Resource):
+    def get(self):
+       
+        rating = request.args.get('rating', type=float)
+        product_name = request.args.get('product_name', type=str)
+        mode_of_payment = request.args.get('paymentMethod', type=str)
+        min_price = request.args.get('priceMin', type=float)
+        max_price = request.args.get('priceMax', type=float)
+        print(mode_of_payment , product_name)
+     
+        rounded_rating = round(rating) if rating is not None else None
+
+     
+        query = Product.query
+        
+      
+        if product_name is not None:
+            query = query.filter(Product.name == product_name)
+            
+        
+ 
+        if mode_of_payment:
+            query = query.filter(Product.mode_of_payment.ilike(f'%{mode_of_payment}%'))
+        if rounded_rating is not None:
+            query = query.filter(func.round(Product.ratings) == rounded_rating)
+        if min_price is not None:
+            query = query.filter(Product.price >= min_price)
+        if max_price is not None:
+            query = query.filter(Product.price <= max_price)
+      
+        products = query.all()
+        
+        if not products:
+            return {"message": "No products found with the applied filters"}, 404
+        
+        products_list = [product.to_dict() for product in products]
+        return {"products": products_list}
+
+
+
+class UserSearchHistory(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity() 
+        searches = Searches.query.filter_by(userId=user_id).all()
+
+        search_data = [
+            {
+                "products": search.products
+            } for search in searches
+        ]
+
+        response = make_response(search_data, 200)
+        return response
+    
 
     
-api.add_resource(SearchHistory, "/searchhistory")
-api.add_resource(CategoryList, '/categories')
-api.add_resource(ProductsByCategory, '/categories/<int:category_id>/')
-api.add_resource(FilteredProducts, '/filtered-products')
+
 api.add_resource(Register, "/register")
 api.add_resource(Login, "/login")
 api.add_resource(VerifyEmail, '/verify/<string:token>')
 api.add_resource(ForgotPassword, '/forgot-password')
 api.add_resource(ResetPassword, '/reset-password/<string:token>')
-
+api.add_resource(CategoryList, '/categories')
+api.add_resource(GetProductsByCategory, '/categories/<int:category_id>/')
+api.add_resource(FilteredProducts, '/filtered-products')
+api.add_resource(GetQueryProduct, '/search')
+api.add_resource(FilteredQueryProduct, '/filterequery')
+api.add_resource(UserSearchHistory, "/searchhistory")
 
 
 if __name__ == "__main__":
