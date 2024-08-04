@@ -2,7 +2,7 @@ from model import db, User, Searches
 from app import app
 from flask_jwt_extended import create_access_token
 import pytest
-import uuid  # Import the uuid module
+import uuid 
 
 @pytest.fixture
 def client():
