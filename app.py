@@ -70,7 +70,7 @@ class Register(Resource):
             f"<p>Dear {user.first_name} {user.last_name},</p>"
             "<p>Thank you for registering at ShopHorizon. To complete your registration and verify your email address, "
             "please click the link below:</p>"
-            f"<p><a href='http://localhost:3000/user/{verification_url}'>Verify your email</a></p>"
+            f"<p><a href='https://shoppers-community.vercel.app/user/{verification_url}'>Verify your email</a></p>"
             "<p>If you did not register for this account, please ignore this email.</p>"
             "<p>Best regards,<br>The ShopHorizon Team</p>"
         )
@@ -120,7 +120,7 @@ class ForgotPassword(Resource):
         db.session.commit()
 
         # Send reset email
-        reset_url = f"http://localhost:3000/resetpassword/{reset_token}"
+        reset_url = f"https://shoppers-community.vercel.app/resetpassword/{reset_token}"
         msg = Message(
             'Password Reset Request',
             recipients=[data['email']],
