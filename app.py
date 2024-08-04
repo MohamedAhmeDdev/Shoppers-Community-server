@@ -12,7 +12,7 @@ from sqlalchemy import func
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://shoptest_sjrn_user:mrgj43ifiREejN4W8Mp8FgNYIHakUwzg@dpg-cqnlrlij1k6c73apr41g-a.oregon-postgres.render.com/shoptest_sjrn'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://shops_db_0mhk_user:MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF@dpg-cqnm7gjv2p9s73afrvug-a.oregon-postgres.render.com/shops_db_0mhk'
 app.config['SECRET_KEY'] = 'weststsgjgjgjtyb'
 app.config['JWT_SECRET_KEY'] = 'trduiguierifd'
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
