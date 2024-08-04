@@ -27,3 +27,4 @@ datetime
 flask_jwt_extended
 flask_mail
 faker
+python-dotenv

@@ -9,21 +9,19 @@ from flask_mail import Mail, Message
 import secrets
 from datetime import timedelta ,datetime
 from sqlalchemy import func
+from config import SECRET_KEY, JWT_SECRET_KEY, DATABASE_URI, MAIL_SERVER, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_USE_TLS, MAIL_USE_SSL
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://shops_db_0mhk_user:MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF@dpg-cqnm7gjv2p9s73afrvug-a.oregon-postgres.render.com/shops_db_0mhk'
-app.config['SECRET_KEY'] = 'weststsgjgjgjtyb'
-app.config['JWT_SECRET_KEY'] = 'trduiguierifd'
-app.config['JWT_TOKEN_LOCATION'] = ['headers']
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-app.config['MAIL_SERVER'] = 'smtp.googlemail.com'  
-app.config['MAIL_PORT'] =  587
-app.config['MAIL_USERNAME'] = 'mohamed.ahmed2@student.moringaschool.com'
-app.config['MAIL_PASSWORD'] = 'yfwl nuoj oksv woya'
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
+app.config['MAIL_SERVER'] = MAIL_SERVER
+app.config['MAIL_PORT'] = MAIL_PORT
+app.config['MAIL_USERNAME'] = MAIL_USERNAME
+app.config['MAIL_PASSWORD'] = MAIL_PASSWORD
+app.config['MAIL_USE_TLS'] = MAIL_USE_TLS
+app.config['MAIL_USE_SSL'] = MAIL_USE_SSL
 
 app.json.compact = False
 bcrypt = Bcrypt()
@@ -46,8 +44,7 @@ class Register(Resource):
         existing_user = User.query.filter_by(email=data.get("email")).first()
         if existing_user:
             return {'message': 'Email already exists'}, 400
-
-        # Generate a verification token
+        
         token = secrets.token_urlsafe(16)
       
         
@@ -145,7 +142,6 @@ class ForgotPassword(Resource):
 class ResetPassword(Resource):
     def post(self, token):
         user = User.query.filter_by(reset_token=token).first()
-        print(user)
         if not user or user.reset_token_expiry < datetime.utcnow():
             return {'message': 'token has expired'}, 400
 
@@ -206,15 +202,11 @@ class GetProductsByCategory(Resource):
 
 class GetQueryProducts(Resource):
     def get(self):
-      
-        search = request.args.get('query', '').lower()
-        print(search)
-    
+        search = request.args.get('query', '').lower()    
         products = Product.query.all()
        
         if search:
             products = [product for product in products if search in product.name.lower()]
-            print(products)
         
         products_list = [product.to_dict() for product in products]
         
@@ -232,14 +224,11 @@ class FilteredProducts(Resource):
         mode_of_payment = request.args.get('paymentMethod', type=str)
         min_price = request.args.get('priceMin', type=float)
         max_price = request.args.get('priceMax', type=float)
-        print(category_id, mode_of_payment)
      
         rounded_rating = round(rating) if rating is not None else None
 
-     
         query = Product.query
-        
-      
+              
         if category_id is not None:
             query = query.filter(Product.categoryId == category_id)
         
@@ -267,22 +256,18 @@ class FilteredProducts(Resource):
 
 class GetQueryProduct(Resource):
     def get(self):
-        # Get the search term from the query parameters
         search = request.args.get('query', '').lower()
-        print(search)
-        
-        # Fetch all products from the database
+     
+     
         products = Product.query.all()
         
-        # Filter products based on the search term
         if search:
             products = [product for product in products if search in product.name.lower()]
-            print(products)
-        
-        # Convert the products to a list of dictionaries
+    
         products_list = [product.to_dict() for product in products]
         
         return jsonify(products_list)
+    
 
 class FilteredQueryProduct(Resource):
     def get(self):
@@ -292,19 +277,15 @@ class FilteredQueryProduct(Resource):
         mode_of_payment = request.args.get('paymentMethod', type=str)
         min_price = request.args.get('priceMin', type=float)
         max_price = request.args.get('priceMax', type=float)
-        print(mode_of_payment , product_name)
      
         rounded_rating = round(rating) if rating is not None else None
 
      
         query = Product.query
-        
-      
+            
         if product_name is not None:
             query = query.filter(Product.name == product_name)
             
-        
- 
         if mode_of_payment:
             query = query.filter(Product.mode_of_payment.ilike(f'%{mode_of_payment}%'))
         if rounded_rating is not None:
@@ -324,21 +305,48 @@ class FilteredQueryProduct(Resource):
 
 
 
+class PostSearchHistory(Resource):
+    @jwt_required()
+    def post(self):
+        user_id = get_jwt_identity()
+        data = request.get_json()
+        
+        product_name = data.get('query')
+
+        product = Product.query.filter_by(name=product_name).first()
+        
+        if product:
+            product_id = product.id
+            new_search = Searches(userId=user_id, productId=product_id)
+            db.session.add(new_search)
+            db.session.commit()
+            
+            response = make_response({"message": "Search history added successfully"}, 201)
+        else:
+            response = make_response({"message": "Product not found"}, 404)
+        
+        return response
+
+
+
+
 class UserSearchHistory(Resource):
     @jwt_required()
     def get(self):
-        user_id = get_jwt_identity() 
+        user_id = get_jwt_identity()
         searches = Searches.query.filter_by(userId=user_id).all()
 
         search_data = [
             {
-                "products": search.products
+                "productName": search.product.name,
+                "productPrice": search.product.price,
+                "searchDate": search.created_at, 
+                "productImage": search.product.product_image
             } for search in searches
         ]
 
-        response = make_response(search_data, 200)
-        return response
-    
+        return jsonify({"products": search_data})
+
 
     
 
@@ -352,6 +360,7 @@ api.add_resource(GetProductsByCategory, '/categories/<int:category_id>/')
 api.add_resource(FilteredProducts, '/filtered-products')
 api.add_resource(GetQueryProduct, '/search')
 api.add_resource(FilteredQueryProduct, '/filterequery')
+api.add_resource(PostSearchHistory, "/post-search-history")
 api.add_resource(UserSearchHistory, "/searchhistory")
 
 

@@ -14,6 +14,7 @@ psycopg2-binary = "*"
 flask-restful = "*"
 flask-bcrypt = "*"
 faker= "*"
+python-dotenv = "*"
 
 [dev-packages]
 

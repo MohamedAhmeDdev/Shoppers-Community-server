@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy import MetaData
+from datetime import datetime
 
 metadata = MetaData(
     naming_convention={
@@ -68,6 +69,7 @@ class Searches(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     productId = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     userId = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     product = db.relationship("Product", back_populates="searches")
     user = db.relationship("User", back_populates="searches")
 
