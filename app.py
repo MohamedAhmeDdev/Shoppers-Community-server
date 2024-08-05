@@ -10,7 +10,7 @@ import secrets
 from datetime import timedelta ,datetime
 from sqlalchemy import func
 from config import SECRET_KEY, JWT_SECRET_KEY, DATABASE_URI, MAIL_SERVER, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_USE_TLS, MAIL_USE_SSL
-
+ 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
