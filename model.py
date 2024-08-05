@@ -1,7 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy import MetaData
+from sqlalchemy.orm import validates
 from datetime import datetime
+import re
 
 metadata = MetaData(
     naming_convention={
@@ -25,6 +27,11 @@ class User(db.Model, SerializerMixin):
     searches = db.relationship("Searches", back_populates="user", cascade="all, delete-orphan")
     serialize_rules = ("-searches.user",)
 
+    @validates('email')
+    def validate_email(self, key, email):
+        assert re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', email), "Invalid email format"
+        return email
+
     def __repr__(self):
         return f'<User {self.id}, {self.first_name}, {self.last_name}>'
 
@@ -41,6 +48,11 @@ class Product(db.Model, SerializerMixin):
     searches = db.relationship("Searches", back_populates="product")
     shop = db.relationship("Shop", back_populates="products")
     serialize_rules = ("-searches", "-shop.products",)
+
+    @validates('price')
+    def validate_price(self, key, price):
+        assert price >= 0, "Price must be non-negative"
+        return price
 
     def __repr__(self):
         return f'<Product {self.id}, {self.name}, {self.price}>'
