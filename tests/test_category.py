@@ -7,10 +7,16 @@ def client():
         with app.app_context():
             db.create_all()
             yield client
+            db.session.remove()
+            db.drop_all()
             
 
 @pytest.fixture
 def setup_categories(client):
+    # Clean up any existing data
+    Category.query.delete()
+    db.session.commit()
+    
     category1 = Category(id=1, name="Electronics")
     category2 = Category(id=2, name="Clothing")
     db.session.add(category1)
@@ -28,6 +34,7 @@ def test_get_categories(client, setup_categories):
     assert data[1]['name'] == "Clothing"
 
 def test_get_categories_no_results(client):
+    # Ensure the categories table is empty
     Category.query.delete()
     db.session.commit()
 
