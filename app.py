@@ -39,11 +39,10 @@ with app.app_context():
 
 
 conn = psycopg2.connect(
-    dbname='shops_db_0mhk',
-    user='shops_db_0mhk_user',
-    password='MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF',
-    host='dpg-cqnm7gjv2p9s73afrvug-a',
-    port='5432'
+    DB_HOST = "dpg-cqnm7gjv2p9s73afrvug-a.oregon-postgres.render.com",
+    DB_NAME = "shops_db",
+    DB_USER = "MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF",
+    DB_PASS = "postgre",
 )
 cursor = conn.cursor()
 
