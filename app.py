@@ -42,9 +42,10 @@ with app.app_context():
 def get_db_connection():
     conn = psycopg2.connect(
         host="dpg-cqnm7gjv2p9s73afrvug-a.oregon-postgres.render.com",
-        database="shops_db",
-        user="MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF",
-        password="postgre"
+        database="shops_db_0mhk",
+        user="shops_db_0mhk_user",
+        password="MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF",
+         sslmode='require' 
     )
     return conn
 
