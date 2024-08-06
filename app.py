@@ -16,6 +16,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 app.config['MAIL_SERVER'] = MAIL_SERVER
 app.config['MAIL_PORT'] = MAIL_PORT
 app.config['MAIL_USERNAME'] = MAIL_USERNAME
@@ -310,8 +311,13 @@ class PostSearchHistory(Resource):
     def post(self):
         user_id = get_jwt_identity()
         data = request.get_json()
+        print(data)
         
         product_name = data.get('query')
+
+        if not product_name:
+            return make_response({"message": "Product name is required"}, 400)
+
 
         product = Product.query.filter_by(name=product_name).first()
         
