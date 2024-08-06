@@ -2,15 +2,18 @@ from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from model import db, User, Product, Searches, Category, Shop
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
 from flask_mail import Mail, Message
-import secrets
-from datetime import timedelta ,datetime
-from sqlalchemy import func
-from config import SECRET_KEY, JWT_SECRET_KEY, DATABASE_URI, MAIL_SERVER, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_USE_TLS, MAIL_USE_SSL
 import psycopg2
+import secrets
+from datetime import timedelta, datetime
+from sqlalchemy import func
+from config import (
+    SECRET_KEY, JWT_SECRET_KEY, DATABASE_URI, MAIL_SERVER, MAIL_PORT, 
+    MAIL_USERNAME, MAIL_PASSWORD, MAIL_USE_TLS, MAIL_USE_SSL
+)
+from model import db, User, Product, Searches, Category, Shop
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -24,7 +27,7 @@ app.config['MAIL_USE_TLS'] = MAIL_USE_TLS
 app.config['MAIL_USE_SSL'] = MAIL_USE_SSL
 
 app.json.compact = False
-bcrypt = Bcrypt()
+bcrypt = Bcrypt(app)
 migrate = Migrate(app, db)
 db.init_app(app)
 CORS(app)
@@ -32,25 +35,24 @@ jwt = JWTManager(app)
 mail = Mail(app)
 api = Api(app)
 
-
-
 with app.app_context():
     db.create_all()
 
-
-conn = psycopg2.connect(
-    DB_HOST = "dpg-cqnm7gjv2p9s73afrvug-a.oregon-postgres.render.com",
-    DB_NAME = "shops_db",
-    DB_USER = "MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF",
-    DB_PASS = "postgre",
-)
-cursor = conn.cursor()
+# Database connection setup
+def get_db_connection():
+    conn = psycopg2.connect(
+        host="dpg-cqnm7gjv2p9s73afrvug-a.oregon-postgres.render.com",
+        database="shops_db",
+        user="MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF",
+        password="postgre"
+    )
+    return conn
 
 @app.teardown_appcontext
 def close_connection(exception):
+    conn = get_db_connection()
     if conn is not None:
         conn.close()
-
 
 
 class Register(Resource):
