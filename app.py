@@ -10,13 +10,12 @@ import secrets
 from datetime import timedelta ,datetime
 from sqlalchemy import func
 from config import SECRET_KEY, JWT_SECRET_KEY, DATABASE_URI, MAIL_SERVER, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_USE_TLS, MAIL_USE_SSL
- 
+import psycopg2
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 app.config['MAIL_SERVER'] = MAIL_SERVER
 app.config['MAIL_PORT'] = MAIL_PORT
 app.config['MAIL_USERNAME'] = MAIL_USERNAME
@@ -34,8 +33,24 @@ mail = Mail(app)
 api = Api(app)
 
 
+
 with app.app_context():
     db.create_all()
+
+
+conn = psycopg2.connect(
+    dbname='shops_db_0mhk',
+    user='shops_db_0mhk_user',
+    password='MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF',
+    host='dpg-cqnm7gjv2p9s73afrvug-a',
+    port='5432'
+)
+cursor = conn.cursor()
+
+@app.teardown_appcontext
+def close_connection(exception):
+    if conn is not None:
+        conn.close()
 
 
 
