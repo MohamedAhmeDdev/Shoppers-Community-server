@@ -1,7 +1,6 @@
 import pytest
 import json
-from app import app, db, Product, User
-
+from app import app, db, User
 from flask_bcrypt import Bcrypt
 import jwt
 import datetime
@@ -20,11 +19,17 @@ def client():
 def setup_users(client):
     # Add a test user
     hashed_password = bcrypt.generate_password_hash('testpassword').decode('utf-8')
-    user = User(first_name='John', last_name='Doe', email='john.doe@example.com', password=hashed_password)
+    user = User(first_name='John', last_name='Doe', email='john.doe@example.com', password=hashed_password, is_verified=True)
     db.session.add(user)
     db.session.commit()
 
-
+@pytest.fixture
+def setup_unverified_user(client):
+    # Add an unverified user
+    hashed_password = bcrypt.generate_password_hash('testpassword').decode('utf-8')
+    user = User(first_name='Jane', last_name='Doe', email='jane.doe@example.com', password=hashed_password, is_verified=False)
+    db.session.add(user)
+    db.session.commit()
 
 def test_login_success(client, setup_users):
     response = client.post('/login', json={
@@ -55,3 +60,13 @@ def test_login_nonexistent_user(client):
 
     assert response.status_code == 401
     assert data['message'] == 'Invalid credentials'
+
+def test_login_unverified_user(client, setup_unverified_user):
+    response = client.post('/login', json={
+        'email': 'jane.doe@example.com',
+        'password': 'testpassword'
+    })
+    data = response.get_json()
+
+    assert response.status_code == 403
+    assert data['message'] == 'Account not Verified. Please check your email.'

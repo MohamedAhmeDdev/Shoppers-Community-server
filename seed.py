@@ -76,7 +76,7 @@ def seed_data():
                     name=template["name"],
                     price=round(random.uniform(10.0, 1000.0), 2),
                     ratings=round(random.uniform(3.0, 5.0), 1),
-                    mode_of_payment=random.choice(["Upfront", "After Delevery"]),
+                    mode_of_payment=random.choice(["Upfront", "After Delivery"]),
                     categoryId=template["category"].id,
                     shopId=shop.id,
                     product_image=upload_image_to_cloudinary(template["product_image"])
