@@ -1,19 +1,21 @@
 from flask_restful import Resource
 from flask import request, jsonify, make_response
-from model import Shop, db
+from model import Shop,Product, db
 
 from flask_jwt_extended import jwt_required
 
-@jwt_required()
+
 class ShopList(Resource):
+    @jwt_required()
     def get(self):
         shops = Shop.query.all()
         shop_list = [shop.to_dict() for shop in shops]
         return jsonify(shop_list)
 
-@jwt_required()
+
 class ShopCreate(Resource):
-     def post(self):
+    @jwt_required()
+    def post(self):
         data = request.get_json()
 
         name = data.get('name')
@@ -27,3 +29,16 @@ class ShopCreate(Resource):
         db.session.commit()
 
         return make_response({"message": "Shop created successfully."}, 201)
+
+
+class ShopProducts(Resource):
+    @jwt_required()
+    def get(self, shop_id):
+        shop = Shop.query.get(shop_id)
+        if not shop:
+            return make_response({"message": "Shop not found."}, 404)
+        
+        products = Product.query.filter_by(shopId=shop_id).all()
+        product_list = [product.to_dict() for product in products]
+
+        return jsonify(product_list)
