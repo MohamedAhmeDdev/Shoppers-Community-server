@@ -15,6 +15,7 @@ flask-restful = "*"
 flask-bcrypt = "*"
 faker= "*"
 python-dotenv = "*"
+flask-mail = "*"
 
 [dev-packages]
 
