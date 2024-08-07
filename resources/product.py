@@ -143,3 +143,38 @@ class UserSearchHistory(Resource):
         ]
 
         return jsonify({"products": search_data})
+
+class Products(Resource):
+    def get(self):
+        products = Product.query.all()
+        products = [product.to_dict() for product in products]
+        return jsonify(products)
+    
+    def post(self):
+        data = request.get_json()
+        new_product = Product(
+            name = data.get("name"),
+            price = data.get("price"),
+            ratings = data.get("ratings"),
+            mode_of_payment = data.get("mode_of_payment"),
+            categoryId = data.get("categoryId"),
+            shopId = data.get("shopId"),
+            product_image = data.get("product_image")
+        )
+
+        db.session.add(new_product)
+        db.session.commit()
+        return make_response(new_product.to_dict(), 200)
+    
+class ProductID(Resource):
+    def get(self, id):
+        product = Product.query.filter_by(id=id).first().to_dict()
+        return make_response(jsonify(product), 201)    
+
+    def delete(self, id):
+        product = Product.query.filter_by(id=id).first()
+        db.session.delete(product)
+        db.session.commit()
+        response = make_response({"message": "Product deleted successfully"}, 201)
+        return response
+
