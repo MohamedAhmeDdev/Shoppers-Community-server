@@ -15,8 +15,8 @@ from config import (
 )
 from model import db, User, Product, Searches, Category, Shop
 from resources.auth import Register, Login, VerifyEmail, ForgotPassword, ResetPassword
-from resources.category import CategoryList, GetProductsByCategory
-from resources.product import FilteredProducts, GetQueryProduct, FilteredQueryProduct, PostSearchHistory, UserSearchHistory
+from resources.category import CategoryList, GetProductsByCategory ,CreateCategory
+from resources.product import CreateProduct, UpdateProduct, FilteredProducts, GetQueryProduct, FilteredQueryProduct, PostSearchHistory, UserSearchHistory
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -67,8 +67,11 @@ api.add_resource(Login, "/login")
 api.add_resource(VerifyEmail, '/verify/<string:token>')
 api.add_resource(ForgotPassword, '/forgot-password')
 api.add_resource(ResetPassword, '/reset-password/<string:token>')
+api.add_resource(CreateCategory, '/create-category')
 api.add_resource(CategoryList, '/categories')
 api.add_resource(GetProductsByCategory, '/categories/<int:category_id>/')
+api.add_resource(CreateProduct, '/create_products')
+api.add_resource(UpdateProduct, '/update_products/<int:product_id>')
 api.add_resource(FilteredProducts, '/filtered-products')
 api.add_resource(GetQueryProduct, '/search')
 api.add_resource(FilteredQueryProduct, '/filterequery')
