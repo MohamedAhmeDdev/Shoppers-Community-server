@@ -17,6 +17,7 @@ from model import db, User, Product, Searches, Category, Shop
 from resources.auth import Register, Login, VerifyEmail, ForgotPassword, ResetPassword
 from resources.category import CategoryList, GetProductsByCategory
 from resources.product import FilteredProducts, GetQueryProduct, FilteredQueryProduct, PostSearchHistory, UserSearchHistory
+from resources.shop import ShopList, ShopCreate
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -74,7 +75,8 @@ api.add_resource(GetQueryProduct, '/search')
 api.add_resource(FilteredQueryProduct, '/filterequery')
 api.add_resource(PostSearchHistory, "/post-search-history")
 api.add_resource(UserSearchHistory, "/searchhistory")
-
+api.add_resource(ShopList,"/shop")
+api.add_resource(ShopCreate,"/create-shop")
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
