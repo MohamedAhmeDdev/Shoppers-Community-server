@@ -218,19 +218,6 @@ class GetProductsByCategory(Resource):
 
 
 
-class GetQueryProducts(Resource):
-    def get(self):
-        search = request.args.get('query', '').lower()    
-        products = Product.query.all()
-       
-        if search:
-            products = [product for product in products if search in product.name.lower()]
-        
-        products_list = [product.to_dict() for product in products]
-        
-        return jsonify(products_list)
-    
-
 
 class FilteredProducts(Resource):
 
