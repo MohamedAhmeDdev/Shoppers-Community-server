@@ -16,7 +16,7 @@ from config import (
 from model import db, User, Product, Searches, Category, Shop
 from resources.auth import Register, Login, VerifyEmail, ForgotPassword, ResetPassword
 from resources.category import CategoryList, GetProductsByCategory ,CreateCategory
-from resources.product import CreateProduct, UpdateProduct, FilteredProducts, GetQueryProduct, FilteredQueryProduct, PostSearchHistory, UserSearchHistory
+from resources.product import CreateProduct, UpdateProduct, FilteredProducts, GetQueryProduct, FilteredQueryProduct, PostSearchHistory, UserSearchHistory,ProductID
 from resources.shop import ShopList, ShopCreate,ShopProducts
 
 app = Flask(__name__)
@@ -75,6 +75,7 @@ api.add_resource(CreateProduct, '/create_products')
 api.add_resource(UpdateProduct, '/update_products/<int:product_id>')
 api.add_resource(FilteredProducts, '/filtered-products')
 api.add_resource(GetQueryProduct, '/search')
+api.add_resource(ProductID, "/product/<int:product_id>")
 api.add_resource(FilteredQueryProduct, '/filterequery')
 api.add_resource(PostSearchHistory, "/post-search-history")
 api.add_resource(UserSearchHistory, "/searchhistory")
