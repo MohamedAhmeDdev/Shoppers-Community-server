@@ -109,11 +109,16 @@ class PostSearchHistory(Resource):
         if not product_name:
             return make_response({"message": "Product name is required"}, 400)
 
-
         product = Product.query.filter_by(name=product_name).first()
         
         if product:
             product_id = product.id
+
+            # Check if the search already exists to prevent duplicates
+            existing_search = Searches.query.filter_by(userId=user_id, productId=product_id).first()
+            if existing_search:
+                return make_response({"message": "Search history already exists"}, 200)
+
             new_search = Searches(userId=user_id, productId=product_id)
             db.session.add(new_search)
             db.session.commit()
@@ -123,6 +128,8 @@ class PostSearchHistory(Resource):
             response = make_response({"message": "Product not found"}, 404)
         
         return response
+        
+       
 
 
 
