@@ -14,6 +14,9 @@ from config import (
     MAIL_USERNAME, MAIL_PASSWORD, MAIL_USE_TLS, MAIL_USE_SSL
 )
 from model import db, User, Product, Searches, Category, Shop
+from resources.auth import Register, Login, VerifyEmail, ForgotPassword, ResetPassword
+from resources.category import CategoryList, GetProductsByCategory
+from resources.product import FilteredProducts, GetQueryProduct, FilteredQueryProduct, PostSearchHistory, UserSearchHistory
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -56,319 +59,306 @@ def close_connection(exception):
         conn.close()
 
 
-class Register(Resource):
-    def post(self):
-        data = request.get_json()
-        existing_user = User.query.filter_by(email=data.get("email")).first()
-        if existing_user:
-            return {'message': 'Email already exists'}, 400
+# class Register(Resource):
+#     def post(self):
+#         data = request.get_json()
+#         existing_user = User.query.filter_by(email=data.get("email")).first()
+#         if existing_user:
+#             return {'message': 'Email already exists'}, 400
         
-        token = secrets.token_urlsafe(16)
+#         token = secrets.token_urlsafe(16)
       
         
-        hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
-        user = User(
-            first_name=data['first_name'],
-            last_name=data['last_name'],
-            email=data['email'],
-            password=hashed_password,
-            verification_token=token,
-        )
-        db.session.add(user)
-        db.session.commit()
+#         hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+#         user = User(
+#             first_name=data['first_name'],
+#             last_name=data['last_name'],
+#             email=data['email'],
+#             password=hashed_password,
+#             verification_token=token,
+#         )
+#         db.session.add(user)
+#         db.session.commit()
 
-        # Send verification email
-        verification_url = f"{token}"
-        msg = Message(
-            'Verify your email', 
-            recipients=[data['email']],
-            sender="eff@gmail.com"
-        )
-        msg.html = (
-            f"<p>Dear {user.first_name} {user.last_name},</p>"
-            "<p>Thank you for registering at ShopHorizon. To complete your registration and verify your email address, "
-            "please click the link below:</p>"
-            f"<p><a href='https://shoppers-community.vercel.app/user/{verification_url}'>Verify your email</a></p>"
-            "<p>If you did not register for this account, please ignore this email.</p>"
-            "<p>Best regards,<br>The ShopHorizon Team</p>"
-        )
-        mail.send(msg)
+#         # Send verification email
+#         verification_url = f"{token}"
+#         msg = Message(
+#             'Verify your email', 
+#             recipients=[data['email']],
+#             sender="eff@gmail.com"
+#         )
+#         msg.html = (
+#             f"<p>Dear {user.first_name} {user.last_name},</p>"
+#             "<p>Thank you for registering at ShopHorizon. To complete your registration and verify your email address, "
+#             "please click the link below:</p>"
+#             f"<p><a href='https://shoppers-community.vercel.app/user/{verification_url}'>Verify your email</a></p>"
+#             "<p>If you did not register for this account, please ignore this email.</p>"
+#             "<p>Best regards,<br>The ShopHorizon Team</p>"
+#         )
+#         mail.send(msg)
 
-        return {'message': 'User registered successfully. Please check your email to verify your account.'}, 201
+#         return {'message': 'User registered successfully. Please check your email to verify your account.'}, 201
     
 
 
-class VerifyEmail(Resource):
-    def get(self, token):
-        user = User.query.filter_by(verification_token=token).first()
-        if not user:
-            return {'message': 'Invalid or expired token'}, 400
-        user.is_verified = True
-        user.verification_token = None  
-        db.session.commit()
-        return {'message': 'Registration confirmed successfully'}, 200
+# class VerifyEmail(Resource):
+#     def get(self, token):
+#         user = User.query.filter_by(verification_token=token).first()
+#         if not user:
+#             return {'message': 'Invalid or expired token'}, 400
+#         user.is_verified = True
+#         user.verification_token = None  
+#         db.session.commit()
+#         return {'message': 'Registration confirmed successfully'}, 200
     
 
-class Login(Resource):
-    def post(self):
-        data = request.get_json()
-        user = User.query.filter_by(email=data['email']).first()
-        if user and bcrypt.check_password_hash(user.password, data['password']):
-            if not user.is_verified:
-                return {'message': 'Account not Verified. Please check your email.'}, 403
-            token = create_access_token(identity=user.id)
-            return {'token': token}, 200
+# class Login(Resource):
+#     def post(self):
+#         data = request.get_json()
+#         user = User.query.filter_by(email=data['email']).first()
+#         if user and bcrypt.check_password_hash(user.password, data['password']):
+#             if not user.is_verified:
+#                 return {'message': 'Account not Verified. Please check your email.'}, 403
+#             token = create_access_token(identity=user.id)
+#             return {'token': token}, 200
         
-        return {'message': 'Invalid credentials'}, 401
+#         return {'message': 'Invalid credentials'}, 401
 
 
 
-class ForgotPassword(Resource):
-    def post(self):
-        data = request.get_json()
-        user = User.query.filter_by(email=data.get('email')).first()
-        if not user:
-            return {'message': 'No user found with this email'}, 404
+# class ForgotPassword(Resource):
+#     def post(self):
+#         data = request.get_json()
+#         user = User.query.filter_by(email=data.get('email')).first()
+#         if not user:
+#             return {'message': 'No user found with this email'}, 404
 
-        # Generate password reset token and expiration
-        reset_token = secrets.token_urlsafe(16)
-        reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
-        user.reset_token = reset_token
-        user.reset_token_expiry = reset_token_expiry
-        db.session.commit()
+#         # Generate password reset token and expiration
+#         reset_token = secrets.token_urlsafe(16)
+#         reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
+#         user.reset_token = reset_token
+#         user.reset_token_expiry = reset_token_expiry
+#         db.session.commit()
 
-        # Send reset email
-        reset_url = f"https://shoppers-community.vercel.app/resetpassword/{reset_token}"
-        msg = Message(
-            'Password Reset Request',
-            recipients=[data['email']],
-            sender="noreply@example.com"
-        )
-        msg.html = (
-            f"<p>Dear {user.first_name},</p>"
-            "<p>You requested to reset your password. Please click the link below to reset your password:</p>"
-            f"<p><a href='{reset_url}'>Reset Password</a></p>"
-            "<p>If you did not request this, please ignore this email.</p>"
-            "<p>Best regards,<br>The ShopHorizon Team</p>"
-        )
-        mail.send(msg)
+#         # Send reset email
+#         reset_url = f"https://shoppers-community.vercel.app/resetpassword/{reset_token}"
+#         msg = Message(
+#             'Password Reset Request',
+#             recipients=[data['email']],
+#             sender="noreply@example.com"
+#         )
+#         msg.html = (
+#             f"<p>Dear {user.first_name},</p>"
+#             "<p>You requested to reset your password. Please click the link below to reset your password:</p>"
+#             f"<p><a href='{reset_url}'>Reset Password</a></p>"
+#             "<p>If you did not request this, please ignore this email.</p>"
+#             "<p>Best regards,<br>The ShopHorizon Team</p>"
+#         )
+#         mail.send(msg)
 
-        return {'message': 'Password reset email sent. Please check your email.'}, 200
+#         return {'message': 'Password reset email sent. Please check your email.'}, 200
 
 
 
-class ResetPassword(Resource):
-    def post(self, token):
-        user = User.query.filter_by(reset_token=token).first()
-        if not user or user.reset_token_expiry < datetime.utcnow():
-            return {'message': 'token has expired'}, 400
+# class ResetPassword(Resource):
+#     def post(self, token):
+#         user = User.query.filter_by(reset_token=token).first()
+#         if not user or user.reset_token_expiry < datetime.utcnow():
+#             return {'message': 'token has expired'}, 400
 
-        data = request.get_json()
-        password = data.get('password')
-        confirm_password = data.get('confirmPassword')
+#         data = request.get_json()
+#         password = data.get('password')
+#         confirm_password = data.get('confirmPassword')
 
-        if password != confirm_password:
-            return {'message': 'Passwords do not match'}, 400
+#         if password != confirm_password:
+#             return {'message': 'Passwords do not match'}, 400
 
-        # Update user password (assuming you have a method to hash the password)
-        user.password = bcrypt.generate_password_hash(password).decode('utf-8')
-        user.reset_token = None
-        user.reset_token_expiry = None
-        db.session.commit()
+#         # Update user password (assuming you have a method to hash the password)
+#         user.password = bcrypt.generate_password_hash(password).decode('utf-8')
+#         user.reset_token = None
+#         user.reset_token_expiry = None
+#         db.session.commit()
 
-        return {'message': 'Password reset successfully'}, 200
+#         return {'message': 'Password reset successfully'}, 200
     
 
 
 
-class CategoryList(Resource):
-    def get(self):
-        categories = Category.query.all()
-        categories = [category.to_dict() for category in categories]
-        return jsonify(categories)
+# class CategoryList(Resource):
+#     def get(self):
+#         categories = Category.query.all()
+#         categories = [category.to_dict() for category in categories]
+#         return jsonify(categories)
 
 
 
 
-class GetProductsByCategory(Resource):
-    def get(self, category_id):
-        query = Product.query.filter_by(categoryId=category_id).all()
-        if not query:
-            return {"message": "No products found for this category with the applied filters"}, 404
+# class GetProductsByCategory(Resource):
+#     def get(self, category_id):
+#         query = Product.query.filter_by(categoryId=category_id).all()
+#         if not query:
+#             return {"message": "No products found for this category with the applied filters"}, 404
 
-        products_list = [product.to_dict() for product in query]
-        products_by_shop = {}
-        product_names = set()
+#         products_list = [product.to_dict() for product in query]
+#         products_by_shop = {}
+#         product_names = set()
 
-        for product in products_list:
-            shop_id = product['shopId']
-            shop = db.session.get(Shop, shop_id)
-            if shop:
-                shop_name = shop.name
-                if shop_name not in products_by_shop:
-                    products_by_shop[shop_name] = {'products': []}
-                products_by_shop[shop_name]['products'].append(product)
-                product_names.add(product['name'])
+#         for product in products_list:
+#             shop_id = product['shopId']
+#             shop = db.session.get(Shop, shop_id)
+#             if shop:
+#                 shop_name = shop.name
+#                 if shop_name not in products_by_shop:
+#                     products_by_shop[shop_name] = {'products': []}
+#                 products_by_shop[shop_name]['products'].append(product)
+#                 product_names.add(product['name'])
 
-        product_names = sorted(product_names)
-        return {
-            "products_by_shop": products_by_shop,
-            "product_names": product_names,
-        }
-
-
-
-class GetQueryProducts(Resource):
-    def get(self):
-        search = request.args.get('query', '').lower()    
-        products = Product.query.all()
-       
-        if search:
-            products = [product for product in products if search in product.name.lower()]
-        
-        products_list = [product.to_dict() for product in products]
-        
-        return jsonify(products_list)
-    
+#         product_names = sorted(product_names)
+#         return {
+#             "products_by_shop": products_by_shop,
+#             "product_names": product_names,
+#         }
 
 
-class FilteredProducts(Resource):
 
-    def get(self):
+
+# class FilteredProducts(Resource):
+
+#     def get(self):
   
-        category_id = request.args.get('category_id', type=int)  
-        rating = request.args.get('rating', type=float)
-        product = request.args.get('product', type=str)
-        mode_of_payment = request.args.get('paymentMethod', type=str)
-        min_price = request.args.get('priceMin', type=float)
-        max_price = request.args.get('priceMax', type=float)
+#         category_id = request.args.get('category_id', type=int)  
+#         rating = request.args.get('rating', type=float)
+#         product = request.args.get('product', type=str)
+#         mode_of_payment = request.args.get('paymentMethod', type=str)
+#         min_price = request.args.get('priceMin', type=float)
+#         max_price = request.args.get('priceMax', type=float)
      
-        rounded_rating = round(rating) if rating is not None else None
+#         rounded_rating = round(rating) if rating is not None else None
 
-        query = Product.query
+#         query = Product.query
               
-        if category_id is not None:
-            query = query.filter(Product.categoryId == category_id)
+#         if category_id is not None:
+#             query = query.filter(Product.categoryId == category_id)
         
-        if product:
-            query = query.filter(Product.name.ilike(f'%{product}%'))
-        if mode_of_payment:
-            query = query.filter(Product.mode_of_payment.ilike(f'%{mode_of_payment}%'))
-        if rounded_rating is not None:
+#         if product:
+#             query = query.filter(Product.name.ilike(f'%{product}%'))
+#         if mode_of_payment:
+#             query = query.filter(Product.mode_of_payment.ilike(f'%{mode_of_payment}%'))
+#         if rounded_rating is not None:
         
-            query = query.filter(func.round(Product.ratings) == rounded_rating)
-        if min_price is not None:
-            query = query.filter(Product.price >= min_price)
-        if max_price is not None:
-            query = query.filter(Product.price <= max_price)
+#             query = query.filter(func.round(Product.ratings) == rounded_rating)
+#         if min_price is not None:
+#             query = query.filter(Product.price >= min_price)
+#         if max_price is not None:
+#             query = query.filter(Product.price <= max_price)
       
-        products = query.all()
+#         products = query.all()
         
-        if not products:
-            return {"message": "No products found with the applied filters"}, 404
+#         if not products:
+#             return {"message": "No products found with the applied filters"}, 404
         
-        products_list = [product.to_dict() for product in products]
-        return {"products": products_list}
+#         products_list = [product.to_dict() for product in products]
+#         return {"products": products_list}
 
 
 
-class GetQueryProduct(Resource):
-    def get(self):
-        search = request.args.get('query', '').lower()
+# class GetQueryProduct(Resource):
+#     def get(self):
+#         search = request.args.get('query', '').lower()
      
      
-        products = Product.query.all()
+#         products = Product.query.all()
         
-        if search:
-            products = [product for product in products if search in product.name.lower()]
+#         if search:
+#             products = [product for product in products if search in product.name.lower()]
     
-        products_list = [product.to_dict() for product in products]
+#         products_list = [product.to_dict() for product in products]
         
-        return jsonify(products_list)
+#         return jsonify(products_list)
     
 
-class FilteredQueryProduct(Resource):
-    def get(self):
+# class FilteredQueryProduct(Resource):
+#     def get(self):
        
-        rating = request.args.get('rating', type=float)
-        product_name = request.args.get('product_name', type=str)
-        mode_of_payment = request.args.get('paymentMethod', type=str)
-        min_price = request.args.get('priceMin', type=float)
-        max_price = request.args.get('priceMax', type=float)
+#         rating = request.args.get('rating', type=float)
+#         product_name = request.args.get('product_name', type=str)
+#         mode_of_payment = request.args.get('paymentMethod', type=str)
+#         min_price = request.args.get('priceMin', type=float)
+#         max_price = request.args.get('priceMax', type=float)
      
-        rounded_rating = round(rating) if rating is not None else None
+#         rounded_rating = round(rating) if rating is not None else None
 
      
-        query = Product.query
+#         query = Product.query
             
-        if product_name is not None:
-            query = query.filter(Product.name == product_name)
+#         if product_name is not None:
+#             query = query.filter(Product.name == product_name)
             
-        if mode_of_payment:
-            query = query.filter(Product.mode_of_payment.ilike(f'%{mode_of_payment}%'))
-        if rounded_rating is not None:
-            query = query.filter(func.round(Product.ratings) == rounded_rating)
-        if min_price is not None:
-            query = query.filter(Product.price >= min_price)
-        if max_price is not None:
-            query = query.filter(Product.price <= max_price)
+#         if mode_of_payment:
+#             query = query.filter(Product.mode_of_payment.ilike(f'%{mode_of_payment}%'))
+#         if rounded_rating is not None:
+#             query = query.filter(func.round(Product.ratings) == rounded_rating)
+#         if min_price is not None:
+#             query = query.filter(Product.price >= min_price)
+#         if max_price is not None:
+#             query = query.filter(Product.price <= max_price)
       
-        products = query.all()
+#         products = query.all()
         
-        if not products:
-            return {"message": "No products found with the applied filters"}, 404
+#         if not products:
+#             return {"message": "No products found with the applied filters"}, 404
         
-        products_list = [product.to_dict() for product in products]
-        return {"products": products_list}
+#         products_list = [product.to_dict() for product in products]
+#         return {"products": products_list}
 
 
 
-class PostSearchHistory(Resource):
-    @jwt_required()
-    def post(self):
-        user_id = get_jwt_identity()
-        data = request.get_json()
-        print(data)
+# class PostSearchHistory(Resource):
+#     @jwt_required()
+#     def post(self):
+#         user_id = get_jwt_identity()
+#         data = request.get_json()
+#         print(data)
         
-        product_name = data.get('query')
+#         product_name = data.get('query')
 
-        if not product_name:
-            return make_response({"message": "Product name is required"}, 400)
+#         if not product_name:
+#             return make_response({"message": "Product name is required"}, 400)
 
 
-        product = Product.query.filter_by(name=product_name).first()
+#         product = Product.query.filter_by(name=product_name).first()
         
-        if product:
-            product_id = product.id
-            new_search = Searches(userId=user_id, productId=product_id)
-            db.session.add(new_search)
-            db.session.commit()
+#         if product:
+#             product_id = product.id
+#             new_search = Searches(userId=user_id, productId=product_id)
+#             db.session.add(new_search)
+#             db.session.commit()
             
-            response = make_response({"message": "Search history added successfully"}, 201)
-        else:
-            response = make_response({"message": "Product not found"}, 404)
+#             response = make_response({"message": "Search history added successfully"}, 201)
+#         else:
+#             response = make_response({"message": "Product not found"}, 404)
         
-        return response
+#         return response
 
 
 
 
-class UserSearchHistory(Resource):
-    @jwt_required()
-    def get(self):
-        user_id = get_jwt_identity()
-        searches = Searches.query.filter_by(userId=user_id).all()
+# class UserSearchHistory(Resource):
+#     @jwt_required()
+#     def get(self):
+#         user_id = get_jwt_identity()
+#         searches = Searches.query.filter_by(userId=user_id).all()
 
-        search_data = [
-            {
-                "productName": search.product.name,
-                "productPrice": search.product.price,
-                "searchDate": search.created_at, 
-                "productImage": search.product.product_image
-            } for search in searches
-        ]
+#         search_data = [
+#             {
+#                 "productName": search.product.name,
+#                 "productPrice": search.product.price,
+#                 "searchDate": search.created_at, 
+#                 "productImage": search.product.product_image
+#             } for search in searches
+#         ]
 
-        return jsonify({"products": search_data})
+#         return jsonify({"products": search_data})
 
 
     
