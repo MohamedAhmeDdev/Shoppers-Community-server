@@ -19,7 +19,6 @@ from resources.category import CategoryList, GetProductsByCategory ,CreateCatego
 from resources.product import CreateProduct, UpdateProduct, FilteredProducts, GetQueryProduct, FilteredQueryProduct, PostSearchHistory, UserSearchHistory,ProductID
 from resources.shop import ShopList, ShopCreate,ShopProducts
 from resources.user import Users
-import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -46,14 +45,14 @@ with app.app_context():
 
 # Database connection setup
 def get_db_connection():
-    DATABASE_URI = os.getenv('DATABASE_URI')
-    try:
-        conn = psycopg2.connect(DATABASE_URI)
-        return conn
-    except psycopg2.Error as e:
-        print(f"Error connecting to database: {e}")
-        return None
-
+    conn = psycopg2.connect(
+        host="dpg-cqnm7gjv2p9s73afrvug-a.oregon-postgres.render.com",
+        database="shops_db_0mhk",
+        user="shops_db_0mhk_user",
+        password="MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF",
+         sslmode='require' 
+    )
+    return conn
 
 @app.teardown_appcontext
 def close_connection(exception):
