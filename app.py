@@ -21,9 +21,9 @@ from resources.shop import ShopList, ShopCreate,ShopProducts
 from resources.user import Users
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://shops_db_0mhk_user:MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF@dpg-cqnm7gjv2p9s73afrvug-a.oregon-postgres.render.com/shops_db_0mhk?sslmode=require'
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 app.config['MAIL_SERVER'] = MAIL_SERVER
 app.config['MAIL_PORT'] = MAIL_PORT
 app.config['MAIL_USERNAME'] = MAIL_USERNAME
