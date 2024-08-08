@@ -1,9 +1,10 @@
 import pytest
 import json
-from app import app, db, User
+from app import app, db
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail, Message
 import secrets
+from resources.user import User
 
 bcrypt = Bcrypt(app)
 mail = Mail(app)

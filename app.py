@@ -5,7 +5,7 @@ from flask_restful import Api
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 from flask_mail import Mail
-from model import db
+from model import db, User, Product, Searches, Category, Shop
 from resources.auth import Register, Login, VerifyEmail, ForgotPassword, ResetPassword
 from resources.category import CategoryList, GetProductsByCategory, CreateCategory
 from resources.product import CreateProduct, UpdateProduct, FilteredProducts, GetQueryProduct, FilteredQueryProduct, PostSearchHistory, UserSearchHistory, ProductID
@@ -19,7 +19,7 @@ from config import (
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shophorizon.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 app.config['MAIL_SERVER'] = MAIL_SERVER
 app.config['MAIL_PORT'] = MAIL_PORT
 app.config['MAIL_USERNAME'] = MAIL_USERNAME

@@ -1,5 +1,6 @@
 import pytest
-from app import app, db, Category
+from app import app, db
+from resources.product import Category
 
 @pytest.fixture
 def client():
