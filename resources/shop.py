@@ -6,7 +6,7 @@ from flask_jwt_extended import jwt_required
 
 
 class ShopList(Resource):
-    @jwt_required()
+    # @jwt_required()
     def get(self):
         shops = Shop.query.all()
         shop_list = [shop.to_dict() for shop in shops]
@@ -14,7 +14,7 @@ class ShopList(Resource):
 
 
 class ShopCreate(Resource):
-    @jwt_required()
+    # @jwt_required()
     def post(self):
         data = request.get_json()
 
