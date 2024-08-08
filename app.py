@@ -19,6 +19,7 @@ from config import (
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shophorizon.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 app.config['MAIL_SERVER'] = MAIL_SERVER
 app.config['MAIL_PORT'] = MAIL_PORT
