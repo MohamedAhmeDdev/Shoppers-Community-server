@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_response, g
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
@@ -6,7 +6,6 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
 from flask_mail import Mail, Message
 import psycopg2
-from psycopg2 import OperationalError
 import secrets
 from datetime import timedelta, datetime
 from sqlalchemy import func
@@ -16,10 +15,11 @@ from config import (
 )
 from model import db, User, Product, Searches, Category, Shop
 from resources.auth import Register, Login, VerifyEmail, ForgotPassword, ResetPassword
-from resources.category import CategoryList, GetProductsByCategory, CreateCategory
-from resources.product import CreateProduct, UpdateProduct, FilteredProducts, GetQueryProduct, FilteredQueryProduct, PostSearchHistory, UserSearchHistory, ProductID
-from resources.shop import ShopList, ShopCreate, ShopProducts
+from resources.category import CategoryList, GetProductsByCategory ,CreateCategory
+from resources.product import CreateProduct, UpdateProduct, FilteredProducts, GetQueryProduct, FilteredQueryProduct, PostSearchHistory, UserSearchHistory,ProductID
+from resources.shop import ShopList, ShopCreate,ShopProducts
 from resources.user import Users
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -46,27 +46,25 @@ with app.app_context():
 
 # Database connection setup
 def get_db_connection():
-    if 'db_conn' not in g:
-        try:
-            g.db_conn = psycopg2.connect(
-                host="dpg-cqqp50o8fa8c73fk7t60-a.oregon-postgres.render.com",
-                database="shopcommunity_o8cq",
-                user="shopcommunity_o8cq_user",
-                password="KToVI80dQy2LRlkOreFWXLIMjmoT7fbg",
-                sslmode='require'
-            )
-        except OperationalError as e:
-            print(f"Database connection failed: {e}")
-            g.db_conn = None
-    return g.db_conn
+    conn = psycopg2.connect(
+        host="dpg-cqqoktt6l47c73b12q70-a.oregon-postgres.render.com",
+        database="shop_qv1p",
+        user="shop_qv1p_user",
+        password="mjRxDJn3V8xCgZ5WNaaseD2xT6VNcQCx",
+         sslmode='require' 
+    )
+    return conn
 
 @app.teardown_appcontext
 def close_connection(exception):
-    conn = g.pop('db_conn', None)
+    conn = get_db_connection()
     if conn is not None:
         conn.close()
 
-# Registering API resources
+
+
+    
+
 api.add_resource(Register, "/register")
 api.add_resource(Login, "/login")
 api.add_resource(VerifyEmail, '/verify/<string:token>')
@@ -87,6 +85,7 @@ api.add_resource(ShopList,"/shop")
 api.add_resource(ShopCreate,"/create-shop")
 api.add_resource(ShopProducts, '/shops/<int:shop_id>/')
 api.add_resource(Users, '/users')
+
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
