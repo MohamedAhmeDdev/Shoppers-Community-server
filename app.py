@@ -1,25 +1,29 @@
-from flask import Flask
+from flask import Flask, request, jsonify, make_response, g
 from flask_cors import CORS
 from flask_migrate import Migrate
-from flask_restful import Api
+from flask_restful import Api, Resource
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager
-from flask_mail import Mail
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token
+from flask_mail import Mail, Message
+import psycopg2
+from psycopg2 import OperationalError
+import secrets
+from datetime import timedelta, datetime
+from sqlalchemy import func
+from config import (
+    SECRET_KEY, JWT_SECRET_KEY, DATABASE_URI, MAIL_SERVER, MAIL_PORT, 
+    MAIL_USERNAME, MAIL_PASSWORD, MAIL_USE_TLS, MAIL_USE_SSL
+)
 from model import db, User, Product, Searches, Category, Shop
 from resources.auth import Register, Login, VerifyEmail, ForgotPassword, ResetPassword
 from resources.category import CategoryList, GetProductsByCategory, CreateCategory
 from resources.product import CreateProduct, UpdateProduct, FilteredProducts, GetQueryProduct, FilteredQueryProduct, PostSearchHistory, UserSearchHistory, ProductID
 from resources.shop import ShopList, ShopCreate, ShopProducts
 from resources.user import Users
-from config import (
-    SECRET_KEY, JWT_SECRET_KEY, DATABASE_URI, MAIL_SERVER, MAIL_PORT, 
-    MAIL_USERNAME, MAIL_PASSWORD, MAIL_USE_TLS, MAIL_USE_SSL
-)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shophorizon.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
 app.config['MAIL_SERVER'] = MAIL_SERVER
 app.config['MAIL_PORT'] = MAIL_PORT
@@ -37,7 +41,32 @@ jwt = JWTManager(app)
 mail = Mail(app)
 api = Api(app)
 
-# API Resources
+with app.app_context():
+    db.create_all()
+
+# Database connection setup
+def get_db_connection():
+    if 'db_conn' not in g:
+        try:
+            g.db_conn = psycopg2.connect(
+                host="dpg-cqnm7gjv2p9s73afrvug-a.oregon-postgres.render.com",
+                database="shops_db_0mhk",
+                user="shops_db_0mhk_user",
+                password="MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF",
+                sslmode='require'
+            )
+        except OperationalError as e:
+            print(f"Database connection failed: {e}")
+            g.db_conn = None
+    return g.db_conn
+
+@app.teardown_appcontext
+def close_connection(exception):
+    conn = g.pop('db_conn', None)
+    if conn is not None:
+        conn.close()
+
+# Registering API resources
 api.add_resource(Register, "/register")
 api.add_resource(Login, "/login")
 api.add_resource(VerifyEmail, '/verify/<string:token>')
@@ -54,8 +83,8 @@ api.add_resource(ProductID, "/product/<int:product_id>")
 api.add_resource(FilteredQueryProduct, '/filterequery')
 api.add_resource(PostSearchHistory, "/post-search-history")
 api.add_resource(UserSearchHistory, "/searchhistory")
-api.add_resource(ShopList, "/shop")
-api.add_resource(ShopCreate, "/create-shop")
+api.add_resource(ShopList,"/shop")
+api.add_resource(ShopCreate,"/create-shop")
 api.add_resource(ShopProducts, '/shops/<int:shop_id>/')
 api.add_resource(Users, '/users')
 
