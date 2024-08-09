@@ -49,10 +49,10 @@ def get_db_connection():
     if 'db_conn' not in g:
         try:
             g.db_conn = psycopg2.connect(
-                host="dpg-cqnm7gjv2p9s73afrvug-a.oregon-postgres.render.com",
-                database="shops_db_0mhk",
-                user="shops_db_0mhk_user",
-                password="MrPxVSEUPz4aJ2pgI0JF2EnYz01cOEHF",
+                host="dpg-cqqp50o8fa8c73fk7t60-a.oregon-postgres.render.com",
+                database="shopcommunity_o8cq",
+                user="shopcommunity_o8cq_user",
+                password="KToVI80dQy2LRlkOreFWXLIMjmoT7fbg",
                 sslmode='require'
             )
         except OperationalError as e:
