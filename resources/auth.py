@@ -32,11 +32,12 @@ class Register(Resource):
             email=data['email'],
             password=hashed_password,
             verification_token=token,
+            role=data['role'],
         )
         db.session.add(user)
         db.session.commit()
 
-        # Send verification email
+
         verification_url = f"{token}"
         msg = Message(
             'Verify your email', 
@@ -89,14 +90,14 @@ class ForgotPassword(Resource):
         if not user:
             return {'message': 'No user found with this email'}, 404
 
-        # Generate password reset token and expiration
+       
         reset_token = secrets.token_urlsafe(16)
         reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
         user.reset_token = reset_token
         user.reset_token_expiry = reset_token_expiry
         db.session.commit()
 
-        # Send reset email
+       
         reset_url = f"https://shoppers-community.vercel.app/resetpassword/{reset_token}"
         msg = Message(
             'Password Reset Request',
@@ -129,7 +130,6 @@ class ResetPassword(Resource):
         if password != confirm_password:
             return {'message': 'Passwords do not match'}, 400
 
-        # Update user password (assuming you have a method to hash the password)
         user.password = bcrypt.generate_password_hash(password).decode('utf-8')
         user.reset_token = None
         user.reset_token_expiry = None

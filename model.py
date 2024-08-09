@@ -25,6 +25,7 @@ class User(db.Model, SerializerMixin):
     verification_token = db.Column(db.String(100), nullable=True)
     reset_token = db.Column(db.String(255), nullable=True)
     reset_token_expiry = db.Column(db.DateTime, nullable=True)
+    role = db.Column(db.String(50), nullable=True)
 
     searches = db.relationship("Searches", back_populates="user", cascade="all, delete-orphan")
 

@@ -73,8 +73,8 @@ class CreateProduct(Resource):
                 price=price, 
                 ratings=ratings,
                 mode_of_payment=mode_of_payment, 
-                categoryId=category.id,
-                shopId=shop.id, 
+                category_id=category.id,
+                shop_id=shop.id, 
                 product_image=file_url
             )
             db.session.add(product)
@@ -88,9 +88,11 @@ class CreateProduct(Resource):
 
 class UpdateProduct(Resource):
     def put(self, product_id):
+        print(product_id)
         product = Product.query.get(product_id)
         if not product:
             return {'message': 'Product not found'}, 404
+
 
         file = request.files.get('file')
         if file:
@@ -109,6 +111,8 @@ class UpdateProduct(Resource):
         category_name = request.form.get('category_name')
         shop_name = request.form.get('shop_name')
 
+        print(name, category_name, shop_name, price, ratings, mode_of_payment)
+        
         if name:
             product.name = name
         if price:
@@ -127,15 +131,16 @@ class UpdateProduct(Resource):
             category = Category.query.filter_by(name=category_name).first()
             if not category:
                 return {'message': 'Invalid category name'}, 400
-            product.categoryId = category.id
+            product.category_id = category.id
         if shop_name:
             shop = Shop.query.filter_by(name=shop_name).first()
             if not shop:
                 return {'message': 'Invalid shop name'}, 400
-            product.shopId = shop.id
+            product.shop_id = shop.id
 
         db.session.commit()
         return {'message': 'Product updated successfully'}, 200
+
 
 
 class FilteredProducts(Resource):
@@ -264,6 +269,7 @@ class PostSearchHistory(Resource):
 
 
 
+
 class UserSearchHistory(Resource):
     @jwt_required()
     def get(self):
@@ -304,12 +310,12 @@ class Products(Resource):
         return make_response(new_product.to_dict(), 200)
     
 class ProductID(Resource):
-    def get(self, id):
-        product = Product.query.filter_by(id=id).first().to_dict()
+    def get(self, product_id):
+        product = Product.query.filter_by(id=product_id).first().to_dict()
         return make_response(jsonify(product), 201)    
 
-    def delete(self, id):
-        product = Product.query.filter_by(id=id).first()
+    def delete(self, product_id):
+        product = Product.query.filter_by(id=product_id).first()
         db.session.delete(product)
         db.session.commit()
         response = make_response({"message": "Product deleted successfully"}, 201)

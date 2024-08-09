@@ -31,31 +31,36 @@ def upload_image_to_cloudinary(image_path):
 class CreateCategory(Resource):
     def post(self):
         if 'file' not in request.files:
-            return {'message': 'No file part'}, 400
+            return jsonify({'message': 'No file part'}), 400
         
         file = request.files['file']
+        
         if file.filename == '':
-            return {'message': 'No selected file'}, 400
+            return jsonify({'message': 'No selected file'}), 400
         
         if file and allowed_file(file.filename):
-            if len(file.read()) == 0:
-                return {'message': 'Empty file'}, 400
+            file_contents = file.read()
+            if len(file_contents) == 0:
+                return jsonify({'message': 'Empty file'}), 400
             file.seek(0) 
-
-            result = cloudinary.uploader.upload(file)
-            file_url = result['url']
+            
+            try:
+                result = cloudinary.uploader.upload(file)
+                file_url = result['url']
+            except Exception as e:
+                return jsonify({'message': 'File upload failed', 'error': str(e)}), 500
             
             category_name = request.form.get('name')
             if not category_name:
-                return {'message': 'Category name is required'}, 400
+                return jsonify({'message': 'Category name is required'}), 400
             
             category = Category(name=category_name, category_image=file_url)
             db.session.add(category)
             db.session.commit()
-               
-            return {'message': 'File uploaded successfully!', 'url': file_url}, 201
+            
+            return jsonify({'message': 'File uploaded successfully!', 'url': file_url}), 201
         
-        return {'message': 'File upload failed'}, 400
+        return jsonify({'message': 'Invalid file format'}), 400
 
 
 
