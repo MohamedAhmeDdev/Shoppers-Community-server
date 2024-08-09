@@ -31,36 +31,37 @@ def upload_image_to_cloudinary(image_path):
 class CreateCategory(Resource):
     def post(self):
         if 'file' not in request.files:
-            return jsonify({'message': 'No file part'}), 400
+            return {'message': 'No file part'}, 400
         
         file = request.files['file']
-        
         if file.filename == '':
-            return jsonify({'message': 'No selected file'}), 400
+            return {'message': 'No selected file'}, 400
         
         if file and allowed_file(file.filename):
-            file_contents = file.read()
-            if len(file_contents) == 0:
-                return jsonify({'message': 'Empty file'}), 400
+            if len(file.read()) == 0:
+                return {'message': 'Empty file'}, 400
             file.seek(0) 
-            
-            try:
-                result = cloudinary.uploader.upload(file)
-                file_url = result['url']
-            except Exception as e:
-                return jsonify({'message': 'File upload failed', 'error': str(e)}), 500
+
+            result = cloudinary.uploader.upload(file)
+            file_url = result['url']
             
             category_name = request.form.get('name')
             if not category_name:
-                return jsonify({'message': 'Category name is required'}), 400
+                return {'message': 'Category name is required'}, 400
+            
+            # Check if the category already exists
+            existing_category = Category.query.filter_by(name=category_name).first()
+            if existing_category:
+                return {'message': f'Category "{category_name}" already exists'}, 400
             
             category = Category(name=category_name, category_image=file_url)
             db.session.add(category)
             db.session.commit()
-            
-            return jsonify({'message': 'File uploaded successfully!', 'url': file_url}), 201
+               
+            return {'message': 'File uploaded successfully!', 'url': file_url}, 201
         
-        return jsonify({'message': 'Invalid file format'}), 400
+        return {'message': 'File upload failed'}, 400
+
 
 
 
