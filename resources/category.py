@@ -1,4 +1,4 @@
-from flask import jsonify , request
+from flask import jsonify , request,make_response
 from flask_restful import Resource
 from model import Category, Product, Shop, db
 import cloudinary
@@ -101,3 +101,13 @@ class GetProductsByCategory(Resource):
             "products_by_shop": products_by_shop,
             "product_names": product_names,
         }
+    
+
+
+class CategoryID(Resource):
+    def delete(self, category_id):
+        category = Category.query.filter_by(id=category_id).first()
+        db.session.delete(category)
+        db.session.commit()
+        response = make_response({"message": "category deleted successfully"}, 201)
+        return response
