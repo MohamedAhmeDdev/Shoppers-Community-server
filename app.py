@@ -47,10 +47,10 @@ with app.app_context():
 # Database connection setup
 def get_db_connection():
     conn = psycopg2.connect(
-        host="dpg-cqqoktt6l47c73b12q70-a.oregon-postgres.render.com",
-        database="shop_qv1p",
-        user="shop_qv1p_user",
-        password="mjRxDJn3V8xCgZ5WNaaseD2xT6VNcQCx",
+        host="dpg-cqrkv5ggph6c73a127fg-a.oregon-postgres.render.com",
+        database="community_4ws0",
+        user="community_4ws0_user",
+        password="V09FhgYK9unsxocEzFXxDJNsEp6H8bGc",
          sslmode='require' 
     )
     return conn

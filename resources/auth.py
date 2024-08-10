@@ -77,7 +77,7 @@ class Login(Resource):
             if not user.is_verified:
                 return {'message': 'Account not Verified. Please check your email.'}, 403
             token = create_access_token(identity=user.id)
-            return {'token': token}, 200
+            return {'token': token, 'role': user.role}, 200
         
         return {'message': 'Invalid credentials'}, 401
 
