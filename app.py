@@ -44,22 +44,6 @@ api = Api(app)
 with app.app_context():
     db.create_all()
 
-# Database connection setup
-def get_db_connection():
-    conn = psycopg2.connect(
-        host="dpg-cqrkv5ggph6c73a127fg-a.oregon-postgres.render.com",
-        database="community_4ws0",
-        user="community_4ws0_user",
-        password="V09FhgYK9unsxocEzFXxDJNsEp6H8bGc",
-         sslmode='require' 
-    )
-    return conn
-
-@app.teardown_appcontext
-def close_connection(exception):
-    conn = get_db_connection()
-    if conn is not None:
-        conn.close()
 
 
 
