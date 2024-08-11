@@ -78,7 +78,7 @@ class CategoryList(Resource):
 
 class GetProductsByCategory(Resource):
     def get(self, category_id):
-        query = Product.query.filter_by(categoryId=category_id).all()
+        query = Product.query.filter_by(category_id=category_id).all()
         if not query:
             return {"message": "No products found for this category with the applied filters"}, 404
 
@@ -87,7 +87,7 @@ class GetProductsByCategory(Resource):
         product_names = set()
 
         for product in products_list:
-            shop_id = product['shopId']
+            shop_id = product['shop_id']
             shop = db.session.get(Shop, shop_id)
             if shop:
                 shop_name = shop.name

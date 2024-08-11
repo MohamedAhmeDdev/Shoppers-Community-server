@@ -153,13 +153,13 @@ class FilteredProducts(Resource):
         mode_of_payment = request.args.get('paymentMethod', type=str)
         min_price = request.args.get('priceMin', type=float)
         max_price = request.args.get('priceMax', type=float)
-     
+        print(mode_of_payment)
         rounded_rating = round(rating) if rating is not None else None
 
         query = Product.query
               
         if category_id is not None:
-            query = query.filter(Product.categoryId == category_id)
+            query = query.filter(Product.category_id == category_id)
         
         if product:
             query = query.filter(Product.name.ilike(f'%{product}%'))
@@ -251,11 +251,11 @@ class PostSearchHistory(Resource):
         if product:
             product_id = product.id
 
-            existing_search = Searches.query.filter_by(userId=user_id, productId=product_id).first()
+            existing_search = Searches.query.filter_by(user_id=user_id, product_id=product_id).first()
             if existing_search:
                 return make_response({"message": "Search history already exists"}, 200)
 
-            new_search = Searches(userId=user_id, productId=product_id)
+            new_search = Searches(user_id=user_id, product_id=product_id)
             db.session.add(new_search)
             db.session.commit()
             
@@ -274,7 +274,7 @@ class UserSearchHistory(Resource):
     @jwt_required()
     def get(self):
         user_id = get_jwt_identity()
-        searches = Searches.query.filter_by(userId=user_id).all()
+        searches = Searches.query.filter_by(user_id=user_id).all()
 
         search_data = [
             {
