@@ -8,6 +8,7 @@ from flask_mail import Mail, Message
 import psycopg2
 import secrets
 from datetime import timedelta, datetime
+from flasgger import Swagger
 from sqlalchemy import func
 from config import (
     SECRET_KEY, JWT_SECRET_KEY, DATABASE_URI, MAIL_SERVER, MAIL_PORT, 
@@ -40,6 +41,8 @@ CORS(app)
 jwt = JWTManager(app)
 mail = Mail(app)
 api = Api(app)
+swagger = Swagger(app)
+
 
 with app.app_context():
     db.create_all()

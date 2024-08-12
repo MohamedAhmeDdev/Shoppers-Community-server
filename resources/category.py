@@ -3,7 +3,7 @@ from flask_restful import Resource
 from model import Category, Product, Shop, db
 import cloudinary
 import cloudinary.uploader
-
+from flasgger import swag_from
 
 
 cloudinary.config(
@@ -29,6 +29,56 @@ def upload_image_to_cloudinary(image_path):
     
 
 class CreateCategory(Resource):
+    @swag_from({
+        'tags': ['Category'],
+        'description': 'Create a new category with an image',
+        'parameters': [
+            {
+                'name': 'file',
+                'in': 'formData',
+                'type': 'file',
+                'description': 'Image file for the category',
+                'required': True
+            },
+            {
+                'name': 'name',
+                'in': 'formData',
+                'type': 'string',
+                'description': 'Name of the category',
+                'required': True
+            }
+        ],
+        'responses': {
+            '201': {
+                'description': 'Category created successfully',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'message': {
+                            'type': 'string',
+                            'example': 'File uploaded successfully!'
+                        },
+                        'url': {
+                            'type': 'string',
+                            'example': 'https://res.cloudinary.com/your-cloud-name/image/upload/v1234567890/shopHorizon/your-image.jpg'
+                        }
+                    }
+                }
+            },
+            '400': {
+                'description': 'Bad request',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'message': {
+                            'type': 'string',
+                            'example': 'No file part'
+                        }
+                    }
+                }
+            }
+        }
+    })
     def post(self):
         if 'file' not in request.files:
             return {'message': 'No file part'}, 400
@@ -49,7 +99,6 @@ class CreateCategory(Resource):
             if not category_name:
                 return {'message': 'Category name is required'}, 400
             
-            # Check if the category already exists
             existing_category = Category.query.filter_by(name=category_name).first()
             if existing_category:
                 return {'message': f'Category "{category_name}" already exists'}, 400
@@ -68,6 +117,35 @@ class CreateCategory(Resource):
 
 
 class CategoryList(Resource):
+    @swag_from({
+        'tags': ['Category'],
+        'description': 'Get the list of all categories',
+        'responses': {
+            '200': {
+                'description': 'List of categories',
+                'schema': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'object',
+                        'properties': {
+                            'id': {
+                                'type': 'integer',
+                                'example': 1
+                            },
+                            'name': {
+                                'type': 'string',
+                                'example': 'Electronics'
+                            },
+                            'category_image': {
+                                'type': 'string',
+                                'example': 'https://res.cloudinary.com/your-cloud-name/image/upload/v1234567890/shopHorizon/your-image.jpg'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    })
     def get(self):
         categories = Category.query.all()
         categories = [category.to_dict() for category in categories]
@@ -105,6 +183,45 @@ class GetProductsByCategory(Resource):
 
 
 class CategoryID(Resource):
+    @swag_from({
+        'tags': ['Category'],
+        'description': 'Delete a category by its ID',
+        'parameters': [
+            {
+                'name': 'category_id',
+                'in': 'path',
+                'type': 'integer',
+                'description': 'ID of the category to delete',
+                'required': True
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'Category deleted successfully',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'message': {
+                            'type': 'string',
+                            'example': 'Category deleted successfully'
+                        }
+                    }
+                }
+            },
+            '404': {
+                'description': 'Category not found',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'message': {
+                            'type': 'string',
+                            'example': 'Category not found'
+                        }
+                    }
+                }
+            }
+        }
+    })
     def delete(self, category_id):
         category = Category.query.filter_by(id=category_id).first()
         db.session.delete(category)

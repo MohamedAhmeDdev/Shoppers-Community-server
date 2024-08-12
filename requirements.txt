@@ -31,3 +31,4 @@ python-dotenv
 psycopg2
 cloudinary
 pymysql
+flasgger

@@ -6,6 +6,7 @@ from flask_mail import Mail, Message
 import secrets
 from datetime import datetime, timedelta
 from model import db, User
+from flasgger import swag_from
 
 bcrypt = Bcrypt()
 mail = Mail()
@@ -16,6 +17,44 @@ mail = Mail()
 
 
 class Register(Resource):
+    @swag_from({
+        'tags': ['Auth'],
+        'description': 'Register a new user',
+        'parameters': [
+            {
+                'name': 'body',
+                'in': 'body',
+                'required': True,
+                'schema': {
+                    'example': {
+                        'first_name': 'John',
+                        'last_name': 'Doe',
+                        'email': 'johndoe@example.com',
+                        'password': 'password123',
+                        'role': 'user'
+                    }
+                }
+            }
+        ],
+        'responses': {
+            201: {
+                'description': 'User registered successfully',
+                'schema': {
+                    'example': {
+                        'message': 'User registered successfully. Please check your email to verify your account.'
+                    }
+                }
+            },
+            400: {
+                'description': 'Email already exists',
+                'schema': {
+                    'example': {
+                        'message': 'Email already exists'
+                    }
+                }
+            }
+        }
+    })
     def post(self):
         data = request.get_json()
         existing_user = User.query.filter_by(email=data.get("email")).first()
@@ -70,6 +109,50 @@ class VerifyEmail(Resource):
     
 
 class Login(Resource):
+    @swag_from({
+        'tags': ['Auth'],
+        'description': 'Login a user',
+        'parameters': [
+            {
+                'name': 'body',
+                'in': 'body',
+                'required': True,
+                'schema': {
+                    'example': {
+                        'email': 'johndoe@example.com',
+                        'password': 'password123'
+                    }
+                }
+            }
+        ],
+        'responses': {
+            200: {
+                'description': 'User logged in successfully',
+                'schema': {
+                    'example': {
+                        'token': 'your-jwt-token',
+                        'role': 'user'
+                    }
+                }
+            },
+            401: {
+                'description': 'Invalid credentials',
+                'schema': {
+                    'example': {
+                        'message': 'Invalid credentials'
+                    }
+                }
+            },
+            403: {
+                'description': 'Account not verified',
+                'schema': {
+                    'example': {
+                        'message': 'Account not Verified. Please check your email.'
+                    }
+                }
+            }
+        }
+    })
     def post(self):
         data = request.get_json()
         user = User.query.filter_by(email=data['email']).first()
@@ -84,6 +167,40 @@ class Login(Resource):
 
 
 class ForgotPassword(Resource):
+    @swag_from({
+        'tags': ['Auth'],
+        'description': 'Request a password reset',
+        'parameters': [
+            {
+                'name': 'body',
+                'in': 'body',
+                'required': True,
+                'schema': {
+                    'example': {
+                        'email': 'johndoe@example.com'
+                    }
+                }
+            }
+        ],
+        'responses': {
+            200: {
+                'description': 'Password reset email sent successfully',
+                'schema': {
+                    'example': {
+                        'message': 'Password reset email sent. Please check your email.'
+                    }
+                }
+            },
+            404: {
+                'description': 'No user found with this email',
+                'schema': {
+                    'example': {
+                        'message': 'No user found with this email'
+                    }
+                }
+            }
+        }
+    })
     def post(self):
         data = request.get_json()
         user = User.query.filter_by(email=data.get('email')).first()
@@ -118,6 +235,40 @@ class ForgotPassword(Resource):
 
 
 class ResetPassword(Resource):
+    @swag_from({
+        'tags': ['Auth'],
+        'description': 'Request a password reset',
+        'parameters': [
+            {
+                'name': 'body',
+                'in': 'body',
+                'required': True,
+                'schema': {
+                    'example': {
+                        'email': 'johndoe@example.com'
+                    }
+                }
+            }
+        ],
+        'responses': {
+            200: {
+                'description': 'Password reset email sent successfully',
+                'schema': {
+                    'example': {
+                        'message': 'Password reset email sent. Please check your email.'
+                    }
+                }
+            },
+            404: {
+                'description': 'No user found with this email',
+                'schema': {
+                    'example': {
+                        'message': 'No user found with this email'
+                    }
+                }
+            }
+        }
+    })
     def post(self, token):
         user = User.query.filter_by(reset_token=token).first()
         if not user or user.reset_token_expiry < datetime.utcnow():

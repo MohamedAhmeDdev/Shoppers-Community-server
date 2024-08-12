@@ -5,6 +5,7 @@ from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, creat
 from sqlalchemy import func
 import cloudinary
 import cloudinary.uploader
+from flasgger import swag_from
 
 
 cloudinary.config(
@@ -309,15 +310,117 @@ class Products(Resource):
         db.session.commit()
         return make_response(new_product.to_dict(), 200)
     
+    
 class ProductID(Resource):
+    @swag_from({
+        'tags': ['Product'],
+        'description': 'Get details of a specific product by ID',
+        'parameters': [
+            {
+                'name': 'product_id',
+                'in': 'path',
+                'type': 'integer',
+                'description': 'ID of the product to retrieve',
+                'required': True
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'Product details',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'id': {
+                            'type': 'integer',
+                            'example': 1
+                        },
+                        'name': {
+                            'type': 'string',
+                            'example': 'Product Name'
+                        },
+                        'price': {
+                            'type': 'number',
+                            'format': 'float',
+                            'example': 19.99
+                        },
+                        'description': {
+                            'type': 'string',
+                            'example': 'Product description here'
+                        },
+                        'category_id': {
+                            'type': 'integer',
+                            'example': 2
+                        },
+                        'shop_id': {
+                            'type': 'integer',
+                            'example': 3
+                        }
+                    }
+                }
+            },
+            '404': {
+                'description': 'Product not found',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'message': {
+                            'type': 'string',
+                            'example': 'Product not found.'
+                        }
+                    }
+                }
+            }
+        }
+    })
     def get(self, product_id):
-        product = Product.query.filter_by(id=product_id).first().to_dict()
-        return make_response(jsonify(product), 201)    
+        product = Product.query.filter_by(id=product_id).first()
+        if not product:
+            return make_response({"message": "Product not found."}, 404)
+        return make_response(jsonify(product.to_dict()), 200)
 
+    @swag_from({
+        'tags': ['Product'],
+        'description': 'Delete a specific product by ID',
+        'parameters': [
+            {
+                'name': 'product_id',
+                'in': 'path',
+                'type': 'integer',
+                'description': 'ID of the product to delete',
+                'required': True
+            }
+        ],
+        'responses': {
+            '200': {
+                'description': 'Product deleted successfully',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'message': {
+                            'type': 'string',
+                            'example': 'Product deleted successfully'
+                        }
+                    }
+                }
+            },
+            '404': {
+                'description': 'Product not found',
+                'schema': {
+                    'type': 'object',
+                    'properties': {
+                        'message': {
+                            'type': 'string',
+                            'example': 'Product not found.'
+                        }
+                    }
+                }
+            }
+        }
+    })
     def delete(self, product_id):
         product = Product.query.filter_by(id=product_id).first()
+        if not product:
+            return make_response({"message": "Product not found."}, 404)
         db.session.delete(product)
         db.session.commit()
-        response = make_response({"message": "Product deleted successfully"}, 201)
-        return response
-
+        return make_response({"message": "Product deleted successfully"}, 200)
