@@ -76,7 +76,7 @@ class Login(Resource):
         if user and bcrypt.check_password_hash(user.password, data['password']):
             if not user.is_verified:
                 return {'message': 'Account not Verified. Please check your email.'}, 403
-            token = create_access_token(identity=user.id)
+            token = create_access_token(identity=user.id, expires_delta=timedelta(days=1))
             return {'token': token, 'role': user.role}, 200
         
         return {'message': 'Invalid credentials'}, 401
